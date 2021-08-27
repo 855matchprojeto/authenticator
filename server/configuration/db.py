@@ -5,7 +5,7 @@ from server.configuration import environment
 Base = declarative_base()
 
 engine = create_async_engine(
-    environment.DB_CONN,
+    environment.DB_CONN_ASYNC,
     echo=environment.DB_ECHO,
     pool_size=environment.DB_POOL_SIZE,
     max_overflow=environment.DB_MAX_OVERFLOW,
