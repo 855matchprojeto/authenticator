@@ -9,5 +9,4 @@ RUN pip3 install --no-cache-dir -r requirements.txt --upgrade
 
 COPY . /usr/src/app
 
-EXPOSE 80
-CMD ["uvicorn", "server.asgi:app", "--host", "0.0.0.0", "--port", "80"]
+CMD uvicorn server.asgi:app --host=0.0.0.0 --port=${PORT:-5000}
