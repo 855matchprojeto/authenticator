@@ -21,4 +21,4 @@ DB_CONN = re.sub(r'\bpostgres://\b', "postgresql://", str(DATABASE_URL), count=1
 
 ENVIRONMENT = os.getenv('ENVIRONMENT') or 'DEV'
 HOST = os.getenv('HOST') or 'localhost'
-PORT = os.getenv('PORT') or 8083
+PORT = os.getenv('PORT') or 80
