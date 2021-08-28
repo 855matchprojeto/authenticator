@@ -1,5 +1,5 @@
 from server.configuration.db import async_db_session, AsyncSession
-from server.model.usuario_model import Usuario
+from server.models.usuario_model import Usuario
 from sqlalchemy.orm import Session
 from sqlalchemy import select, insert, update, literal_column
 from typing import List

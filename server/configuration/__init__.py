@@ -1,5 +1,5 @@
 """
-    Configurações gerais da aplicação, tais como:
+    Módulo responsável pelas configurações gerais da aplicação, tais como:
 
     - Logging
     - Variáveis de ambiente

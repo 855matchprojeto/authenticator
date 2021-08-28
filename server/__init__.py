@@ -1,10 +1,12 @@
-import uvicorn
-
 from fastapi import FastAPI
 from server.configuration import exceptions
-from server.controller.usuario_controller import usuario_router
+from server.controllers.usuario_controller import usuario_router
 from server.configuration import environment
-from fastapi.exceptions import RequestValidationError
+
+
+routers = [
+    usuario_router
+]
 
 
 def _init_app():
@@ -31,4 +33,6 @@ def configura_exception_handlers(app):
 
 
 def configura_routers(app):
-    app.include_router(**usuario_router),
+    for router in routers:
+        app.include_router(**router),
+

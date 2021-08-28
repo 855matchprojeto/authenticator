@@ -5,7 +5,6 @@
 
 from datetime import datetime
 from sqlalchemy import Column, String, DateTime
-from pydantic import BaseModel
 
 
 class AuthenticatorBase:
@@ -13,13 +12,4 @@ class AuthenticatorBase:
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     created_by = Column(String)
     updated_by = Column(String)
-
-
-class AuthenticatorModelInput(BaseModel):
-    def convert_to_dict(self):
-        raise NotImplementedError
-
-
-class AuthenticatorModelOutput(BaseModel):
-    pass
 

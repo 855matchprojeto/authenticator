@@ -1,7 +1,7 @@
 from server.repository.usuario_repository import UsuarioRepository
 from server.configuration.db import AsyncSession
-from server.model.usuario_model import UsuarioInput, UsuarioOutput, Usuario
-from fastapi.security import HTTPBasicCredentials
+from server.schemas.usuario_schema import UsuarioInput, UsuarioOutput
+from server.models.usuario_model import Usuario
 import re
 from server.configuration import exceptions
 from sqlalchemy import or_
@@ -81,6 +81,5 @@ class UsuarioService:
 
         # Insere no banco de dados e retorna o usuário
 
-        x = await self.repo.insere_usuario(novo_usuario_dict)
-        return x
+        return await self.repo.insere_usuario(novo_usuario_dict)
 

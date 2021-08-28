@@ -13,7 +13,7 @@ DB_POOL_SIZE = os.getenv('DB_POOL_SIZE') or 80
 DB_MAX_OVERFLOW = os.getenv('DB_MAX_OVERFLOW') or 10
 DB_POOL_PRE_PING = os.getenv('DB_POOL_PRE_PING') or True
 
-DATABASE_URL = 'postgres://xojmqlwdxfynpb:8a0a8cc1689c0e066ac33dc6fca194bf610cc764d6f71c87e6318dd49c82fa52@ec2-18-209-153-180.compute-1.amazonaws.com:5432/dcbi94kke45ffj'
+DATABASE_URL = os.getenv('DATABASE_URL')
 DB_CONN_ASYNC = re.sub(r'\bpostgres://\b', "postgresql+asyncpg://", str(DATABASE_URL), count=1)
 DB_CONN = re.sub(r'\bpostgres://\b', "postgresql://", str(DATABASE_URL), count=1)
 
@@ -21,4 +21,4 @@ DB_CONN = re.sub(r'\bpostgres://\b', "postgresql://", str(DATABASE_URL), count=1
 
 ENVIRONMENT = os.getenv('ENVIRONMENT') or 'DEV'
 HOST = os.getenv('HOST') or 'localhost'
-PORT = os.getenv('PORT') or 80
+PORT = int(os.getenv('PORT')) if os.getenv('PORT') else 8080
