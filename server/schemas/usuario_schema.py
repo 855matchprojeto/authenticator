@@ -1,8 +1,10 @@
 from server.schemas import AuthenticatorModelInput, AuthenticatorModelOutput
 from uuid import UUID as GUID
 import sqlalchemy
-from pydantic import Field
+from pydantic import Field, BaseModel
 from datetime import datetime
+from typing import List
+from server.models.permissao_model import Permissao
 
 
 class UsuarioInput(AuthenticatorModelInput):
@@ -22,7 +24,6 @@ class UsuarioInput(AuthenticatorModelInput):
 
 class UsuarioOutput(AuthenticatorModelOutput):
 
-    guid: GUID = Field(None)
     nome: str = Field(None)
     username: str = Field(None)
     email: str = Field(None)
@@ -33,4 +34,14 @@ class UsuarioOutput(AuthenticatorModelOutput):
     class Config:
         orm_mode = True
         arbitrary_types_allowed = True
+
+
+class CurrentUser(BaseModel):
+
+    name: str
+    username: str
+    guid: str
+    email: str
+    roles: List[int]
+    permissions: List[str]
 
