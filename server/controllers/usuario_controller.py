@@ -10,7 +10,7 @@ from fastapi.security import SecurityScopes, OAuth2PasswordRequestForm
 from server.dependencies import oauth2
 from typing import List
 from server.dependencies.get_current_user import get_current_user
-
+from server.constants.permission import RoleBasedPermission
 
 router = APIRouter()
 usuario_router = dict(
@@ -38,7 +38,7 @@ async def get_login_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 @router.get("", response_model=List[usuario_schema.UsuarioOutput])
 @session_exception_handler
 async def get_all_users(
-        _: usuario_schema.CurrentUser = Security(get_current_user, scopes=['READ_ALL_USERS']),
+        _: usuario_schema.CurrentUser = Security(get_current_user, scopes=[RoleBasedPermission.READ_ALL_USERS['name']]),
         session: AsyncSession = Depends(get_session)):
 
     service = UsuarioService(session)
