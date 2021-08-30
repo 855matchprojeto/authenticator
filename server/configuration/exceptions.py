@@ -20,7 +20,6 @@ class ApiBaseException(HTTPException):
 
 
 class UnprocessableEntityException(ApiBaseException):
-
     def __init__(
         self,
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -32,7 +31,6 @@ class UnprocessableEntityException(ApiBaseException):
 
 
 class InvalidEmailException(ApiBaseException):
-
     def __init__(
         self,
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -43,8 +41,18 @@ class InvalidEmailException(ApiBaseException):
         super().__init__(status_code, error_id, message, detail)
 
 
-class UsernameConflictException(ApiBaseException):
+class EmailNotVerifiedException(ApiBaseException):
+    def __init__(
+        self,
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        error_id='EMAIL_NOT_VERIFIED',
+        message='Email não verificado',
+        detail=''
+    ) -> None:
+        super().__init__(status_code, error_id, message, detail)
 
+
+class UsernameConflictException(ApiBaseException):
     def __init__(
         self,
         status_code=status.HTTP_409_CONFLICT,
@@ -56,12 +64,55 @@ class UsernameConflictException(ApiBaseException):
 
 
 class EmailConflictException(ApiBaseException):
-
     def __init__(
         self,
         status_code=status.HTTP_409_CONFLICT,
         error_id='EMAIL_ALREADY_EXISTS',
         message='O e-mail já existe no sistema',
+        detail=''
+    ) -> None:
+        super().__init__(status_code, error_id, message, detail)
+
+
+class UserNotFoundException(ApiBaseException):
+    def __init__(
+        self,
+        status_code=status.HTTP_404_NOT_FOUND,
+        error_id='USER_NOT_FOUND',
+        message='O usuário não foi encontrado no sistema',
+        detail=''
+    ) -> None:
+        super().__init__(status_code, error_id, message, detail)
+
+
+class InvalidUsernamePasswordException(ApiBaseException):
+    def __init__(
+        self,
+        status_code=status.HTTP_403_FORBIDDEN,
+        error_id='INVALID_USERNAME_OR_PASSWORD',
+        message='Usuário ou senha inválidos',
+        detail=''
+    ) -> None:
+        super().__init__(status_code, error_id, message, detail)
+
+
+class InvalidExpiredTokenException(ApiBaseException):
+    def __init__(
+        self,
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        error_id='INVALID_OR_EXPIRED_TOKEN',
+        message='Token de acesso inválido ou expirado',
+        detail=''
+    ) -> None:
+        super().__init__(status_code, error_id, message, detail)
+
+
+class NotEnoughPermissionsException(ApiBaseException):
+    def __init__(
+        self,
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        error_id='NOT_ENOUGH_PERMISSION',
+        message='Permissões não suficientes para o acesso desse recurso',
         detail=''
     ) -> None:
         super().__init__(status_code, error_id, message, detail)

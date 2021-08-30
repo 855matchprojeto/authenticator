@@ -22,3 +22,9 @@ DB_CONN = re.sub(r'\bpostgres://\b', "postgresql://", str(DATABASE_URL), count=1
 ENVIRONMENT = os.getenv('ENVIRONMENT') or 'DEV'
 HOST = os.getenv('HOST') or 'localhost'
 PORT = int(os.getenv('PORT')) if os.getenv('PORT') else 8080
+
+ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS = int(os.getenv('ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS') or '1800')
+EMAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS = int(os.getenv('EMAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS') or '600')
+ACCESS_TOKEN_SECRET_KEY = os.getenv('ACCESS_TOKEN_SECRET_KEY')
+ACCESS_TOKEN_ALGORITHM = os.getenv('ACCESS_TOKEN_ALGORITHM')
+

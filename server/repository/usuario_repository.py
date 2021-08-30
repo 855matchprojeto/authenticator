@@ -1,6 +1,8 @@
-from server.configuration.db import async_db_session, AsyncSession
+from server.configuration.db import AsyncSession
 from server.models.usuario_model import Usuario
-from sqlalchemy.orm import Session
+from server.models.vinculo_usuario_funcao_model import VinculoUsuarioFuncao
+from server.models.vinculo_permissao_funcao_model import VinculoPermissaoFuncao
+from sqlalchemy.orm import selectinload, join
 from sqlalchemy import select, insert, update, literal_column
 from typing import List
 
@@ -29,7 +31,10 @@ class UsuarioRepository:
     async def find_usuarios_by_filtros(self, filtros: List) -> List[Usuario]:
         stmt = (
             select(Usuario).
-            where(*filtros)
+            where(*filtros).
+            options(
+                selectinload(Usuario.funcoes)
+            )
         )
         query = await self.db_session.execute(stmt)
         return query.scalars().all()
