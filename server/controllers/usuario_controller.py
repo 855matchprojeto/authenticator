@@ -38,9 +38,9 @@ async def get_login_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 @router.get("", response_model=List[usuario_schema.UsuarioOutput])
 @session_exception_handler
 async def get_all_users(
-        curr_user: usuario_schema.CurrentUser = Security(get_current_user, scopes=['READ_ALL_USERS']),
+        _: usuario_schema.CurrentUser = Security(get_current_user, scopes=['READ_ALL_USERS']),
         session: AsyncSession = Depends(get_session)):
 
     service = UsuarioService(session)
-    return await service.gera_novo_token_login('q')
+    return await service.get_all_users()
 

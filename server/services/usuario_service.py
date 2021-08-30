@@ -73,6 +73,9 @@ class UsuarioService:
 
         return user[0]
 
+    async def get_all_users(self):
+        return await self.repo.find_usuarios_by_filtros(filtros=[])
+
     async def gera_novo_token_login(self, form_data: OAuth2PasswordRequestForm) -> dict:
         """
             Função responsável por autenticar o usuário com a informação do form
