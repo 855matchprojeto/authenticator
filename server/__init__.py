@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from server.configuration import exceptions
 from server.controllers.usuario_controller import usuario_router
 from server.configuration import environment
-from server.configuration import environment
 
 
 routers = [

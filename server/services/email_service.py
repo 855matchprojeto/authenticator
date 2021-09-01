@@ -12,15 +12,15 @@ class EmailService:
         self.background_tasks = background_tasks
 
     def send_email_background(self, recipient_email_list: List[EmailStr], subject: str,
-                              template_body: dict, template_name: str):
+                              rendered_html: str):
         message = MessageSchema(
             subject=subject,
             recipients=recipient_email_list,
-            template_body=template_body
+            html=rendered_html,
+            subtype="html"
         )
         self.background_tasks.add_task(
             self.fast_mail.send_message,
-            message=message,
-            template_name=template_name
+            message
         )
 

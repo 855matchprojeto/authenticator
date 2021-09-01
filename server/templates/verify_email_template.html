@@ -6,16 +6,11 @@
 </head>
 </html>
 <body>
-    <header>
-
-    </header>
-    <main style="margin-bottom: 10px">
+    <div style="margin-bottom: 10px">
         <h2 style="font-size: 30px">Olá {{ user['name'] }},</h2>
         <p style="font-size: 20px; margin-bottom: 10px">Foi verificado que você se registrou na <strong>Plataforma de Matching de Projetos da Unicamp</strong> com o nome de usuário <em>{{ user['username'] }}</em> e
             com o email <em>{{ user['email'] }}</em>. Para continuar acessando a plataforma, confirme seu endereço de e-mail, clicando no seguinte link: </p>
         <a href="{{ verify_link }}" style="font-size: 20px">{{ verify_link }}</a>
-    </main>
-    <footer>
         <p style="font-size: 20px">O link de verificação acima se expirará em {{ expires_in_hours }} horas.</p>
-    </footer>
+    </div>
 </body>

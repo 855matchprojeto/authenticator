@@ -29,8 +29,7 @@ class UsuarioService:
         MAIL_SERVER=environment.MAIL_SERVER,
         MAIL_TLS=environment.MAIL_TLS,
         MAIL_SSL=environment.MAIL_SSL,
-        USE_CREDENTIALS=environment.MAIL_USE_CREDENTIALS,
-        TEMPLATE_FOLDER='templates'
+        USE_CREDENTIALS=environment.MAIL_USE_CREDENTIALS
     )
 
     email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]*unicamp\.br\b'
@@ -192,6 +191,21 @@ class UsuarioService:
             algorithm=environment.MAIL_TOKEN_ALGORITHM
         )
 
+        # Renderiza o HTML do e-mail a partir do template
+
+        email_template = jinja2_templates.get_template('verify_email_template.html')
+        template_dict = {
+            'user': {
+                'email': user.email,
+                'name': user.nome,
+                'username': user.username
+            },
+            'expires_in_hours': environment.MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS // 3600,
+            'verify_link': f'{environment.SERVER_DNS}/users/verify-email?code={email_token}'
+        }
+
+        rendered_html = email_template.render(template_dict)
+
         # Enviando o email em background e gerando um link para o usuário
         # clicar, com o token. Esse servidor implementará um
         # GET que trata essa URL, confirmando o e-mail
@@ -204,16 +218,7 @@ class UsuarioService:
         email_service.send_email_background(
             recipient_email_list=[user.email],
             subject="Plataforma de Match de Projetos - Verificação de Email",
-            template_name='verify_email_template.html',
-            template_body={
-                'user': {
-                    'email': user.email,
-                    'name': user.nome,
-                    'username': user.username
-                },
-                'expires_in_hours': environment.MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS//3600,
-                'verify_link': f'{environment.SERVER_DNS}/users/verify-email?code={email_token}'
-            }
+            rendered_html=rendered_html
         )
 
     async def gera_novo_token_login(self, form_data: OAuth2PasswordRequestForm) -> dict:
