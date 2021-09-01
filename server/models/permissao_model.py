@@ -16,10 +16,7 @@ class Permissao(db.Base, AuthenticatorBase):
     descricao = Column(String(), nullable=False, unique=True)
 
     funcoes = relationship(
-        'Funcao',
-        primaryjoin=(
-            'VinculoPermissaoFuncao.id_permissao == Permissao.id'
-        ),
-        secondary='tb_vinculo_permissao_funcao'
+        'VinculoPermissaoFuncao',
+        back_populates='permissao'
     )
 

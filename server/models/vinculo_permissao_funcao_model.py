@@ -1,9 +1,7 @@
 from sqlalchemy import Column, BigInteger, ForeignKey
 from server.models import AuthenticatorBase
 from server.configuration import db
-from sqlalchemy.orm import relationship, backref
-from server.models.funcao_model import Funcao
-from server.models.permissao_model import Permissao
+from sqlalchemy.orm import relationship
 
 
 class VinculoPermissaoFuncao(db.Base, AuthenticatorBase):
@@ -21,6 +19,6 @@ class VinculoPermissaoFuncao(db.Base, AuthenticatorBase):
     id_permissao = Column(BigInteger, ForeignKey("tb_permissao.id"))
     id_funcao = Column(BigInteger, ForeignKey("tb_funcao.id"))
 
-    permissao = relationship(Permissao, backref=backref('tb_vinculo_permissao_funcao', cascade='all, delete-orphan'))
-    funcao = relationship(Funcao, backref=backref('tb_vinculo_permissao_funcao', cascade='all, delete-orphan'))
+    funcao = relationship('Funcao', back_populates='permissoes')
+    permissao = relationship('Permissao', back_populates='funcoes')
 

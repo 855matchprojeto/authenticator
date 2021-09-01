@@ -17,7 +17,7 @@ from fastapi import BackgroundTasks, Request
 from fastapi_mail import ConnectionConfig
 from pydantic import ValidationError
 from server.templates import jinja2_templates
-
+from pathlib import Path
 
 class UsuarioService:
 
@@ -30,7 +30,7 @@ class UsuarioService:
         MAIL_TLS=environment.MAIL_TLS,
         MAIL_SSL=environment.MAIL_SSL,
         USE_CREDENTIALS=environment.MAIL_USE_CREDENTIALS,
-        TEMPLATE_FOLDER='./templates'
+        TEMPLATE_FOLDER='templates'
     )
 
     email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]*unicamp\.br\b'

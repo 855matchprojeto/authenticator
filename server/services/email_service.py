@@ -12,7 +12,7 @@ class EmailService:
         self.background_tasks = background_tasks
 
     def send_email_background(self, recipient_email_list: List[EmailStr], subject: str,
-                   template_body: dict, template_name: str):
+                              template_body: dict, template_name: str):
         message = MessageSchema(
             subject=subject,
             recipients=recipient_email_list,
