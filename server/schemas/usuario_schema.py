@@ -1,10 +1,7 @@
 from server.schemas import AuthenticatorModelInput, AuthenticatorModelOutput
-from uuid import UUID as GUID
-import sqlalchemy
 from pydantic import Field, BaseModel, EmailStr
 from datetime import datetime
 from typing import List
-from server.models.permissao_model import Permissao
 
 
 class UsuarioInput(AuthenticatorModelInput):
