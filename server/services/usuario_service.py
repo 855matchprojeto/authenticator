@@ -3,20 +3,35 @@ from server.configuration.db import AsyncSession
 from server.schemas.usuario_schema import UsuarioInput, UsuarioOutput
 from server.models.usuario_model import Usuario
 import re
-from server.configuration import exceptions
-from sqlalchemy import or_
+from server.configuration import exceptions, environment
+from sqlalchemy import or_, and_
 from passlib.context import CryptContext
-from server.dependencies import oauth2
 from jose import JWTError, jwt
-from server.schemas.token_shema import TokenOutput
+from server.schemas.token_shema import DecodedMailToken
 from datetime import timedelta
-from server.configuration import environment
 from datetime import datetime
 from typing import List
 from fastapi.security import OAuth2PasswordRequestForm
+from server.services.email_service import EmailService
+from fastapi import BackgroundTasks, Request
+from fastapi_mail import ConnectionConfig
+from pydantic import ValidationError
+from server.templates import jinja2_templates
 
 
 class UsuarioService:
+
+    EMAIL_SENDER_CONFIG = ConnectionConfig(
+        MAIL_USERNAME=environment.MAIL_USERNAME,
+        MAIL_PASSWORD=environment.MAIL_PASSWORD,
+        MAIL_FROM=environment.MAIL_FROM,
+        MAIL_PORT=environment.MAIL_PORT,
+        MAIL_SERVER=environment.MAIL_SERVER,
+        MAIL_TLS=environment.MAIL_TLS,
+        MAIL_SSL=environment.MAIL_SSL,
+        USE_CREDENTIALS=environment.MAIL_USE_CREDENTIALS,
+        TEMPLATE_FOLDER='./templates'
+    )
 
     email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]*unicamp\.br\b'
 
@@ -30,7 +45,8 @@ class UsuarioService:
     def criptografa_senha(self, password: str) -> str:
         return self.crypt_context.hash(password)
 
-    def gena_access_token(self, data_to_encode: dict, expires_delta: timedelta):
+    def gena_token(self, data_to_encode: dict, expires_delta: timedelta,
+                          secret_key: str, algorithm: str):
         """
             Função responsável por atualizar o objeto à ser codificado
             adicionando duas informações adicionais:
@@ -53,8 +69,8 @@ class UsuarioService:
 
         return jwt.encode(
             data_to_encode,
-            environment.ACCESS_TOKEN_SECRET_KEY,
-            algorithm=environment.ACCESS_TOKEN_ALGORITHM
+            secret_key,
+            algorithm=algorithm
         )
 
     def __init__(self, db_session: AsyncSession):
@@ -75,6 +91,130 @@ class UsuarioService:
 
     async def get_all_users(self):
         return await self.repo.find_usuarios_by_filtros(filtros=[])
+
+    async def verify_email(self, request: Request, code: str):
+        """
+            No email de verificação é enviado uma query
+            string 'code' com o token criado pelo servidor.
+
+            Nesse endpoint, o token é decodificado e é verificado
+            se é valido e se não foi expirado.
+
+            Caso a verificação seja bem sucedida, o usuário relacionado
+            o usuário é marcado como 'email_verificado' no banco
+        """
+
+        try:
+            decoded_token_dict = jwt.decode(
+                code,
+                environment.MAIL_TOKEN_SECRET_KEY,
+                algorithms=[environment.MAIL_TOKEN_ALGORITHM]
+            )
+            decoded_token = DecodedMailToken(**decoded_token_dict)
+        except (JWTError, ValidationError):
+            raise exceptions.InvalidExpiredTokenException()
+
+        # Verificando se o usuário de fato existe no banco de dados
+
+        filtros = [
+            and_(
+                Usuario.email == decoded_token.email,
+                Usuario.username == decoded_token.username
+            )
+        ]
+
+        user_list = await self.repo.find_usuarios_by_filtros(filtros)
+        if len(user_list) == 0:
+            raise exceptions.InvalidExpiredTokenException()
+        user = user_list[0]
+
+        # Marca o email como confirmado
+
+        await self.repo.verify_email(user)
+
+        # Enviando um HTML de resposta
+
+        return jinja2_templates.TemplateResponse(
+            'email_confirmed_body_template.html',
+            {
+                'request': request,
+                'user': {
+                    'name': user.nome,
+                    'email': user.email,
+                    'username': user.username
+                }
+            }
+        )
+
+    async def send_email_verification_link(self, username: str, background_tasks: BackgroundTasks):
+        """
+            Função responsável por enviar o email de verificação
+            para confirmar o e-mail do usuário.
+
+            Gera um token com um tempo de expiração bem-definido
+            Esse token vai ser adicionado na query string de uma URL
+            que é tratada pelo servidor no endpoint /users/verify-email
+
+            Essa URL é enviada no e-mail para que o usuário clique no link
+            e confirme de fato seu e-mail
+        """
+
+        user_list = await self.repo.find_usuarios_by_filtros([Usuario.username == username])
+        if len(user_list) == 0:
+            raise exceptions.UserNotFoundException(
+                detail=f'Não foi encontrado um usuário {username}'
+            )
+
+        user = user_list[0]
+        if user.email_verificado:
+            raise exceptions.EmailAlreadyConfirmedException(
+                detail=f'O e-mail {user.email} já foi confirmado pelo sistema'
+            )
+
+        # Construindo o objeto para ser codificado
+        # Constitui um token que será inserido no link para
+        # confirmar o e-mail do usuário
+
+        email_token_before_encode = {
+            'name': user.nome,
+            'email': user.email,
+            'username': user.username
+        }
+
+        email_token_expire_delta = timedelta(
+            seconds=environment.MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS
+        )
+
+        email_token = self.gena_token(
+            data_to_encode=email_token_before_encode,
+            expires_delta=email_token_expire_delta,
+            secret_key=environment.MAIL_TOKEN_SECRET_KEY,
+            algorithm=environment.MAIL_TOKEN_ALGORITHM
+        )
+
+        # Enviando o email em background e gerando um link para o usuário
+        # clicar, com o token. Esse servidor implementará um
+        # GET que trata essa URL, confirmando o e-mail
+
+        email_service = EmailService(
+            UsuarioService.EMAIL_SENDER_CONFIG,
+            background_tasks
+        )
+
+        email_service.send_email_background(
+            recipient_email_list=[user.email],
+            subject="Plataforma de Match de Projetos - Verificação de Email",
+            template_name='verify_email_template.html',
+            template_body={
+                'user': {
+                    'email': user.email,
+                    'name': user.nome,
+                    'username': user.username
+                },
+                'expires_in_hours': environment.MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS//3600,
+                'verify_link': f'{environment.SERVER_DNS}/users/verify-email?code={email_token}'
+            }
+        )
 
     async def gera_novo_token_login(self, form_data: OAuth2PasswordRequestForm) -> dict:
         """
@@ -113,9 +253,11 @@ class UsuarioService:
             seconds=environment.ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS
         )
 
-        access_token = self.gena_access_token(
+        access_token = self.gena_token(
             data_to_encode=access_token_before_encode,
-            expires_delta=access_token_expire_delta
+            expires_delta=access_token_expire_delta,
+            secret_key=environment.ACCESS_TOKEN_SECRET_KEY,
+            algorithm=environment.ACCESS_TOKEN_ALGORITHM
         )
 
         return {

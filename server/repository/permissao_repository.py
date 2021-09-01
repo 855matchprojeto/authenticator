@@ -1,4 +1,4 @@
-from server.configuration.db import async_db_session, AsyncSession
+from server.configuration.db import AsyncSession
 from server.models.permissao_model import Permissao
 from server.models.vinculo_permissao_funcao_model import VinculoPermissaoFuncao
 from server.models.funcao_model import Funcao

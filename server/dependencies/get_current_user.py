@@ -7,7 +7,7 @@ from fastapi.security import SecurityScopes
 from jose import JWTError, jwt
 from server.configuration import environment, exceptions
 from pydantic import ValidationError
-from server.schemas.token_shema import DecodedToken
+from server.schemas.token_shema import DecodedAccessToken
 from server.repository.permissao_repository import PermissaoRepository
 
 
@@ -33,7 +33,7 @@ async def get_current_user(
             environment.ACCESS_TOKEN_SECRET_KEY,
             algorithms=[environment.ACCESS_TOKEN_ALGORITHM]
         )
-        decoded_token = DecodedToken(**decoded_token_dict)
+        decoded_token = DecodedAccessToken(**decoded_token_dict)
     except (JWTError, ValidationError):
         raise exceptions.InvalidExpiredTokenException()
 

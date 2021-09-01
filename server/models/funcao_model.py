@@ -1,6 +1,4 @@
-import uuid
-from sqlalchemy import Column, BigInteger, String, Boolean
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, BigInteger, String
 from server.models import AuthenticatorBase
 from server.configuration import db
 from sqlalchemy.orm import relationship

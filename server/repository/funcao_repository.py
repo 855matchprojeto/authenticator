@@ -1,6 +1,6 @@
-from server.configuration.db import async_db_session, AsyncSession
+from server.configuration.db import AsyncSession
 from server.models.funcao_model import Funcao
-from sqlalchemy import select, insert, update, literal_column
+from sqlalchemy import select
 from typing import List
 
 

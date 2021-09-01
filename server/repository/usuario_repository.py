@@ -1,9 +1,7 @@
 from server.configuration.db import AsyncSession
 from server.models.usuario_model import Usuario
-from server.models.vinculo_usuario_funcao_model import VinculoUsuarioFuncao
-from server.models.vinculo_permissao_funcao_model import VinculoPermissaoFuncao
-from sqlalchemy.orm import selectinload, join
-from sqlalchemy import select, insert, update, literal_column
+from sqlalchemy.orm import selectinload
+from sqlalchemy import select, insert, literal_column
 from typing import List
 
 
@@ -39,3 +37,7 @@ class UsuarioRepository:
         query = await self.db_session.execute(stmt)
         return query.scalars().all()
 
+    async def verify_email(self, user: Usuario) -> Usuario:
+        user.email_verificado = True
+        await self.db_session.flush()
+        return user
