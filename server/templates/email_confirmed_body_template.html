@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Email confirmado!</title>
+        <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
+	</head>
+	<body>
+		<header style="margin-bottom: 10px;">
+            <h1>Email confirmado!</h1>
+		</header>
+		<main style="font-size: 20px">
+			{{ user['name'] }}, seu e-mail <em>{{ user['email'] }}</em> foi confirmado com sucesso.
+			Faça o login com o nome de usuário <em>{{ user['username'] }}</em> e acesse a <strong>Plataforma de Match de Projetos</strong>.
+		</main>
+		<footer>
+		</footer>
+	</body>
+</html>
