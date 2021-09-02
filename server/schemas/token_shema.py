@@ -2,11 +2,11 @@ from server.schemas import AuthenticatorModelInput, AuthenticatorModelOutput
 from uuid import UUID as GUID
 from pydantic import Field
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List
 
 
-class TokenOutput(AuthenticatorModelOutput):
+class AccessTokenOutput(AuthenticatorModelOutput):
 
     access_token: str
     expires_in: int
@@ -24,11 +24,18 @@ class TokenOutput(AuthenticatorModelOutput):
         arbitrary_types_allowed = True
 
 
-class DecodedToken(BaseModel):
+class DecodedAccessToken(BaseModel):
 
     guid: str
     name: str
-    email: str
+    email: EmailStr
     username: str
     roles: List[str]
+
+
+class DecodedMailToken(BaseModel):
+
+    name: str
+    email: EmailStr
+    username: str
 

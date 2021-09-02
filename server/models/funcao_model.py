@@ -1,6 +1,4 @@
-import uuid
-from sqlalchemy import Column, BigInteger, String, Boolean
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, BigInteger, String
 from server.models import AuthenticatorBase
 from server.configuration import db
 from sqlalchemy.orm import relationship
@@ -17,11 +15,13 @@ class Funcao(db.Base, AuthenticatorBase):
     nome = Column(String(), nullable=False, unique=True)
     descricao = Column(String(), nullable=False, unique=True)
 
+    usuarios = relationship(
+        'VinculoUsuarioFuncao',
+        back_populates='funcao'
+    )
+
     permissoes = relationship(
-        'Permissao',
-        primaryjoin=(
-            'VinculoPermissaoFuncao.id_funcao == Funcao.id'
-        ),
-        secondary='tb_vinculo_permissao_funcao'
+        'VinculoPermissaoFuncao',
+        back_populates='funcao'
     )
 

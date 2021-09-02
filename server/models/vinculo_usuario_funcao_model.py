@@ -1,9 +1,7 @@
 from sqlalchemy import Column, BigInteger, ForeignKey
 from server.models import AuthenticatorBase
 from server.configuration import db
-from server.models.funcao_model import Funcao
-from server.models.usuario_model import Usuario
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship
 
 
 class VinculoUsuarioFuncao(db.Base, AuthenticatorBase):
@@ -21,6 +19,6 @@ class VinculoUsuarioFuncao(db.Base, AuthenticatorBase):
     id_usuario = Column(BigInteger, ForeignKey("tb_usuario.id"))
     id_funcao = Column(BigInteger, ForeignKey("tb_funcao.id"))
 
-    usuario = relationship(Usuario, backref=backref('tb_vinculo_usuario_funcao', cascade='all, delete-orphan'))
-    funcao = relationship(Funcao, backref=backref('tb_vinculo_usuario_funcao', cascade='all, delete-orphan'))
+    usuario = relationship('Usuario', back_populates='funcoes')
+    funcao = relationship('Funcao', back_populates='usuarios')
 

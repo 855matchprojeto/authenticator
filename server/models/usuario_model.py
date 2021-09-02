@@ -4,6 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from server.models import AuthenticatorBase
 from server.configuration import db
 from sqlalchemy.orm import relationship
+from server.models.vinculo_usuario_funcao_model import VinculoUsuarioFuncao
 
 
 class Usuario(db.Base, AuthenticatorBase):
@@ -22,10 +23,7 @@ class Usuario(db.Base, AuthenticatorBase):
     email_verificado = Column(Boolean(), default=False)
 
     funcoes = relationship(
-        "Funcao",
-        primaryjoin=(
-          'VinculoUsuarioFuncao.id_usuario == Usuario.id'
-        ),
-        secondary='tb_vinculo_usuario_funcao'
+        "VinculoUsuarioFuncao",
+        back_populates='usuario',
     )
 

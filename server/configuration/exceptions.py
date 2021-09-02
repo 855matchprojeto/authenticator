@@ -1,5 +1,4 @@
 from fastapi import HTTPException, status
-from fastapi.exceptions import RequestValidationError
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
@@ -25,6 +24,17 @@ class UnprocessableEntityException(ApiBaseException):
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         error_id='UNPROCESSABLE_ENTITY',
         message='Ocorreu um problema ao processar a entidade',
+        detail=''
+    ) -> None:
+        super().__init__(status_code, error_id, message, detail)
+
+
+class EmailAlreadyConfirmedException(ApiBaseException):
+    def __init__(
+        self,
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        error_id='EMAIL_ALREADY_CONFIRMED',
+        message='Email já verificado pelo sistema',
         detail=''
     ) -> None:
         super().__init__(status_code, error_id, message, detail)
