@@ -31,7 +31,7 @@ class UsuarioRepository:
             select(Usuario).
             where(*filtros).
             options(
-                selectinload(Usuario.funcoes)
+                selectinload(Usuario.vinculos_usuario_funcao)
             )
         )
         query = await self.db_session.execute(stmt)

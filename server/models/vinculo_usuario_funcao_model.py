@@ -19,6 +19,6 @@ class VinculoUsuarioFuncao(db.Base, AuthenticatorBase):
     id_usuario = Column(BigInteger, ForeignKey("tb_usuario.id"))
     id_funcao = Column(BigInteger, ForeignKey("tb_funcao.id"))
 
-    usuario = relationship('Usuario', back_populates='funcoes')
-    funcao = relationship('Funcao', back_populates='usuarios')
+    usuario = relationship('Usuario', back_populates='vinculos_usuario_funcao')
+    funcao = relationship('Funcao', back_populates='vinculos_usuario_funcao')
 

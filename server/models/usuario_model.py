@@ -22,7 +22,7 @@ class Usuario(db.Base, AuthenticatorBase):
     email = Column(String(), unique=True, nullable=False)
     email_verificado = Column(Boolean(), default=False)
 
-    funcoes = relationship(
+    vinculos_usuario_funcao = relationship(
         "VinculoUsuarioFuncao",
         back_populates='usuario',
     )
