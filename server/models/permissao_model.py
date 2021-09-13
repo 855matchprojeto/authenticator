@@ -15,7 +15,7 @@ class Permissao(db.Base, AuthenticatorBase):
     nome = Column(String(), nullable=False, unique=True)
     descricao = Column(String(), nullable=False, unique=True)
 
-    funcoes = relationship(
+    vinculos_permissao_funcao = relationship(
         'VinculoPermissaoFuncao',
         back_populates='permissao'
     )

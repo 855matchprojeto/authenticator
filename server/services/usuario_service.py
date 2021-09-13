@@ -17,7 +17,7 @@ from fastapi import BackgroundTasks, Request
 from fastapi_mail import ConnectionConfig
 from pydantic import ValidationError
 from server.templates import jinja2_templates
-from pathlib import Path
+
 
 class UsuarioService:
 
@@ -248,7 +248,7 @@ class UsuarioService:
             'email': user.email,
             'username': user.username,
             'roles': (
-                [funcao.id for funcao in user.funcoes]
+                [vinculo.id_funcao for vinculo in user.vinculos_usuario_funcao]
             )
         }
 
