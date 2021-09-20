@@ -21,7 +21,7 @@ from server.configuration.environment import Environment
 
 class UsuarioService:
 
-    EMAIL_REGEX_UNICAMP = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]*unicamp\.br\b'
+    EMAIL_REGEX_UNICAMP = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]*unicamp\.br\b$'
     CRYPT_CONTEXT = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
     @staticmethod
