@@ -13,3 +13,4 @@ omit =
     */server/__init__.py
     */server/constants/*
     */server/templates/*
+    */server/repository/*
