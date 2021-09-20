@@ -485,8 +485,8 @@ class TestUsuarioService:
         ("user2", "Teste2", "pass2", "teste@students.ic.unicamp.br")
     ])
     @pytest.mark.asyncio
-    async def test_cria_novo_usuario_email_conflict(empty_arr, nome,
-                                                    password, username, email):
+    async def test_cria_novo_usuario(empty_arr, nome,
+                                     password, username, email):
 
         usuario_input_mock = Mock()
         usuario_input_mock.email = email

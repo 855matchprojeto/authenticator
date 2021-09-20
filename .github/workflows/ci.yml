@@ -31,4 +31,4 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run unit tests
-        run: pytest server/tests/unit --cov-config=.github/workflows/unit.coveragerc --cov=server
+        run: pytest server/tests/unit --cov-config=.github/workflows/unit.coveragerc --cov=server --cov-report term-missing
