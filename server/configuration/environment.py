@@ -1,16 +1,18 @@
 import re
-from pydantic import BaseSettings, EmailStr
+import pathlib
+from pydantic import BaseSettings, EmailStr, Field
 
 
 class Environment(BaseSettings):
 
     # Configurações do banco de dados
 
-    DB_HOST: str = "localhost"
-    DB_USER: str = 'postgres'
-    DB_PASS: str = '1234'
-    DB_NAME: str = 'db_mc855_authenticator'
-    DB_PORT: str = '5438'
+    TEST_DB_HOST = "localhost"
+    TEST_DB_USER: str = "postgres"
+    TEST_DB_PASS: str = '1234'
+    TEST_DB_NAME: str = 'db_mc855_authenticator'
+    TEST_DB_PORT: str = '5940'
+
     DB_ECHO: bool = True
     DB_POOL_SIZE: int = 80
     DB_MAX_OVERFLOW: int = 10
@@ -51,6 +53,15 @@ class Environment(BaseSettings):
     @staticmethod
     def get_db_conn_default(database_url: str):
         return re.sub(r'\bpostgres://\b', "postgresql://", database_url, count=1)
+
+    @staticmethod
+    def get_test_db_conn_default(test_db_host: str, test_db_user: str, test_db_pass: str,
+                                 test_db_name: str, test_db_port: str):
+        return f"postgresql://{test_db_user}:{test_db_pass}@{test_db_host}:{test_db_port}/{test_db_name}"
+
+    def get_test_db_conn_async(test_db_host: str, test_db_user: str, test_db_pass: str,
+                                 test_db_name: str, test_db_port: str):
+        return f"postgresql+asyncpg://{test_db_user}:{test_db_pass}@{test_db_host}:{test_db_port}/{test_db_name}"
 
     class Config:
         env_file = '.env/AUTHENTICATOR.env'
