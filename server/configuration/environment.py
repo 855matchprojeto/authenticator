@@ -1,44 +1,69 @@
-import os
 import re
+import pathlib
+from pydantic import BaseSettings, EmailStr, Field
 
-# Configurações do banco de dados
 
-DB_HOST = os.getenv('DB_HOST') or 'localhost'
-DB_USER = os.getenv('DB_USER') or 'postgres'
-DB_PASS = os.getenv('DB_PASS') or '1234'
-DB_NAME = os.getenv('DB_NAME') or 'db_mc855_authenticator'
-DB_PORT = os.getenv('DB_PORT') or '5438'
-DB_ECHO = os.getenv('DB_ECHO') or True
-DB_POOL_SIZE = os.getenv('DB_POOL_SIZE') or 80
-DB_MAX_OVERFLOW = os.getenv('DB_MAX_OVERFLOW') or 10
-DB_POOL_PRE_PING = os.getenv('DB_POOL_PRE_PING') or True
+class Environment(BaseSettings):
 
-DATABASE_URL = os.getenv('DATABASE_URL')
-DB_CONN_ASYNC = re.sub(r'\bpostgres://\b', "postgresql+asyncpg://", str(DATABASE_URL), count=1)
-DB_CONN = re.sub(r'\bpostgres://\b', "postgresql://", str(DATABASE_URL), count=1)
+    # Configurações do banco de dados
 
-# Configurações do servidor
+    TEST_DB_HOST = "localhost"
+    TEST_DB_USER: str = "postgres"
+    TEST_DB_PASS: str = '1234'
+    TEST_DB_NAME: str = 'db_mc855_authenticator'
+    TEST_DB_PORT: str = '5940'
 
-ENVIRONMENT = os.getenv('ENVIRONMENT') or 'DEV'
-HOST = os.getenv('HOST') or 'localhost'
-PORT = int(os.getenv('PORT')) if os.getenv('PORT') else 8080
+    DB_ECHO: bool = True
+    DB_POOL_SIZE: int = 80
+    DB_MAX_OVERFLOW: int = 10
+    DB_POOL_PRE_PING: bool = True
 
-ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS = int(os.getenv('ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS') or '1800')
-MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS = int(os.getenv('MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS') or '600')
+    DATABASE_URL: str
 
-ACCESS_TOKEN_SECRET_KEY = os.getenv('ACCESS_TOKEN_SECRET_KEY')
-ACCESS_TOKEN_ALGORITHM = os.getenv('ACCESS_TOKEN_ALGORITHM')
+    # Configurações do servidor
 
-MAIL_TOKEN_SECRET_KEY = os.getenv('MAIL_TOKEN_SECRET_KEY')
-MAIL_TOKEN_ALGORITHM = os.getenv('MAIL_TOKEN_ALGORITHM')
+    ENVIRONMENT: str = 'DEV'
+    HOST: str = 'localhost'
+    PORT: int = 8080
 
-MAIL_USERNAME = str(os.getenv('MAIL_USERNAME'))
-MAIL_PASSWORD = str(os.getenv('MAIL_PASSWORD'))
-MAIL_FROM = str(os.getenv('MAIL_FROM'))
-MAIL_PORT = int(os.getenv('MAIL_PORT'))
-MAIL_SERVER = str(os.getenv('MAIL_SERVER'))
-MAIL_TLS = bool(int(os.getenv('MAIL_TLS')))
-MAIL_SSL = bool(int(os.getenv('MAIL_SSL')))
-MAIL_USE_CREDENTIALS = bool(int(os.getenv('MAIL_USE_CREDENTIALS')))
+    ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS: int = 1800
+    MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS: int = 600
 
-SERVER_DNS = os.getenv('SERVER_DNS')
+    ACCESS_TOKEN_SECRET_KEY: str
+    ACCESS_TOKEN_ALGORITHM: str
+
+    MAIL_TOKEN_SECRET_KEY: str
+    MAIL_TOKEN_ALGORITHM: str
+
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: EmailStr
+    MAIL_PORT: int
+    MAIL_SERVER: str
+    MAIL_TLS: int
+    MAIL_SSL: int
+    MAIL_USE_CREDENTIALS: int
+
+    SERVER_DNS: str
+
+    @staticmethod
+    def get_db_conn_async(database_url: str):
+        return re.sub(r'\bpostgres://\b', "postgresql+asyncpg://", database_url, count=1)
+
+    @staticmethod
+    def get_db_conn_default(database_url: str):
+        return re.sub(r'\bpostgres://\b', "postgresql://", database_url, count=1)
+
+    @staticmethod
+    def get_test_db_conn_default(test_db_host: str, test_db_user: str, test_db_pass: str,
+                                 test_db_name: str, test_db_port: str):
+        return f"postgresql://{test_db_user}:{test_db_pass}@{test_db_host}:{test_db_port}/{test_db_name}"
+
+    def get_test_db_conn_async(test_db_host: str, test_db_user: str, test_db_pass: str,
+                                 test_db_name: str, test_db_port: str):
+        return f"postgresql+asyncpg://{test_db_user}:{test_db_pass}@{test_db_host}:{test_db_port}/{test_db_name}"
+
+    class Config:
+        env_file = '.env/AUTHENTICATOR.env'
+        env_file_encoding = 'utf-8'
+

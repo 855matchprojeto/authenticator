@@ -3,49 +3,42 @@ from server.configuration.db import AsyncSession
 from server.schemas.usuario_schema import UsuarioInput, UsuarioOutput
 from server.models.usuario_model import Usuario
 import re
-from server.configuration import exceptions, environment
+from server.configuration import exceptions
 from sqlalchemy import or_, and_
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from server.schemas.token_shema import DecodedMailToken
 from datetime import timedelta
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from fastapi.security import OAuth2PasswordRequestForm
 from server.services.email_service import EmailService
-from fastapi import BackgroundTasks, Request
-from fastapi_mail import ConnectionConfig
-from pydantic import ValidationError
+from fastapi import Request
+from pydantic import ValidationError, EmailStr
 from server.templates import jinja2_templates
-from pathlib import Path
+from server.configuration.environment import Environment
+
 
 class UsuarioService:
 
-    EMAIL_SENDER_CONFIG = ConnectionConfig(
-        MAIL_USERNAME=environment.MAIL_USERNAME,
-        MAIL_PASSWORD=environment.MAIL_PASSWORD,
-        MAIL_FROM=environment.MAIL_FROM,
-        MAIL_PORT=environment.MAIL_PORT,
-        MAIL_SERVER=environment.MAIL_SERVER,
-        MAIL_TLS=environment.MAIL_TLS,
-        MAIL_SSL=environment.MAIL_SSL,
-        USE_CREDENTIALS=environment.MAIL_USE_CREDENTIALS
-    )
-
-    email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]*unicamp\.br\b'
+    EMAIL_REGEX_UNICAMP = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]*unicamp\.br\b$'
+    CRYPT_CONTEXT = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
     @staticmethod
-    def valida_email_unicamp(email: str):
-        return re.match(UsuarioService.email_regex, email)
+    def valida_email_unicamp(email: EmailStr):
+        return re.match(UsuarioService.EMAIL_REGEX_UNICAMP, email)
 
-    def verifica_senha(self, password: str, hashed_password: str) -> bool:
-        return self.crypt_context.verify(password, hashed_password)
+    @staticmethod
+    def verifica_senha(password: str, hashed_password: str) -> bool:
+        return UsuarioService.CRYPT_CONTEXT.verify(password, hashed_password)
 
-    def criptografa_senha(self, password: str) -> str:
-        return self.crypt_context.hash(password)
+    @staticmethod
+    def criptografa_senha(password: str) -> str:
+        return UsuarioService.CRYPT_CONTEXT.hash(password)
 
-    def gena_token(self, data_to_encode: dict, expires_delta: timedelta,
-                          secret_key: str, algorithm: str):
+    @staticmethod
+    def gera_token(data_to_encode: dict, expires_delta: timedelta,
+                   secret_key: str, algorithm: str):
         """
             Função responsável por atualizar o objeto à ser codificado
             adicionando duas informações adicionais:
@@ -71,10 +64,12 @@ class UsuarioService:
             secret_key,
             algorithm=algorithm
         )
-
-    def __init__(self, db_session: AsyncSession):
-        self.repo: UsuarioRepository = UsuarioRepository(db_session)
-        self.crypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+        
+    def __init__(self, user_repo: Optional[UsuarioRepository] = None, environment: Optional[Environment] = None,
+                 email_sender_service: Optional[EmailService] = None):
+        self.user_repo = user_repo
+        self.environment = environment
+        self.email_sender_service = email_sender_service
 
     async def autentica_usuario(self, username: str, password: str):
         """
@@ -82,14 +77,14 @@ class UsuarioService:
             É verificado se o usuário existe e se a senha está correta
         """
 
-        user: List[Usuario] = await self.repo.find_usuarios_by_filtros([Usuario.username == username])
-        if len(user) == 0 or not self.verifica_senha(password, user[0].hashed_password):
+        user: List[Usuario] = await self.user_repo.find_usuarios_by_filtros([Usuario.username == username])
+        if len(user) == 0 or not UsuarioService.verifica_senha(password, user[0].hashed_password):
             raise exceptions.InvalidUsernamePasswordException()
 
         return user[0]
 
     async def get_all_users(self):
-        return await self.repo.find_usuarios_by_filtros(filtros=[])
+        return await self.user_repo.find_usuarios_by_filtros(filtros=[])
 
     async def verify_email(self, request: Request, code: str):
         """
@@ -106,8 +101,8 @@ class UsuarioService:
         try:
             decoded_token_dict = jwt.decode(
                 code,
-                environment.MAIL_TOKEN_SECRET_KEY,
-                algorithms=[environment.MAIL_TOKEN_ALGORITHM]
+                self.environment.MAIL_TOKEN_SECRET_KEY,
+                algorithms=[self.environment.MAIL_TOKEN_ALGORITHM]
             )
             decoded_token = DecodedMailToken(**decoded_token_dict)
         except (JWTError, ValidationError):
@@ -122,14 +117,14 @@ class UsuarioService:
             )
         ]
 
-        user_list = await self.repo.find_usuarios_by_filtros(filtros)
+        user_list = await self.user_repo.find_usuarios_by_filtros(filtros)
         if len(user_list) == 0:
             raise exceptions.InvalidExpiredTokenException()
         user = user_list[0]
 
         # Marca o email como confirmado
 
-        await self.repo.verify_email(user)
+        await self.user_repo.verify_email(user)
 
         # Enviando um HTML de resposta
 
@@ -145,7 +140,7 @@ class UsuarioService:
             }
         )
 
-    async def send_email_verification_link(self, username: str, background_tasks: BackgroundTasks):
+    async def send_email_verification_link(self, username: str):
         """
             Função responsável por enviar o email de verificação
             para confirmar o e-mail do usuário.
@@ -158,7 +153,7 @@ class UsuarioService:
             e confirme de fato seu e-mail
         """
 
-        user_list = await self.repo.find_usuarios_by_filtros([Usuario.username == username])
+        user_list = await self.user_repo.find_usuarios_by_filtros([Usuario.username == username])
         if len(user_list) == 0:
             raise exceptions.UserNotFoundException(
                 detail=f'Não foi encontrado um usuário {username}'
@@ -181,14 +176,14 @@ class UsuarioService:
         }
 
         email_token_expire_delta = timedelta(
-            seconds=environment.MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS
+            seconds=self.environment.MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS
         )
 
-        email_token = self.gena_token(
+        email_token = UsuarioService.gera_token(
             data_to_encode=email_token_before_encode,
             expires_delta=email_token_expire_delta,
-            secret_key=environment.MAIL_TOKEN_SECRET_KEY,
-            algorithm=environment.MAIL_TOKEN_ALGORITHM
+            secret_key=self.environment.MAIL_TOKEN_SECRET_KEY,
+            algorithm=self.environment.MAIL_TOKEN_ALGORITHM
         )
 
         # Renderiza o HTML do e-mail a partir do template
@@ -200,8 +195,8 @@ class UsuarioService:
                 'name': user.nome,
                 'username': user.username
             },
-            'expires_in_hours': environment.MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS // 3600,
-            'verify_link': f'{environment.SERVER_DNS}/users/verify-email?code={email_token}'
+            'expires_in_hours': self.environment.MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS // 3600,
+            'verify_link': f'{self.environment.SERVER_DNS}/users/verify-email?code={email_token}'
         }
 
         rendered_html = email_template.render(template_dict)
@@ -210,12 +205,7 @@ class UsuarioService:
         # clicar, com o token. Esse servidor implementará um
         # GET que trata essa URL, confirmando o e-mail
 
-        email_service = EmailService(
-            UsuarioService.EMAIL_SENDER_CONFIG,
-            background_tasks
-        )
-
-        email_service.send_email_background(
+        self.email_sender_service.send_email_background(
             recipient_email_list=[user.email],
             subject="Plataforma de Match de Projetos - Verificação de Email",
             rendered_html=rendered_html
@@ -248,26 +238,26 @@ class UsuarioService:
             'email': user.email,
             'username': user.username,
             'roles': (
-                [funcao.id for funcao in user.funcoes]
+                [vinculo.id_funcao for vinculo in user.vinculos_usuario_funcao]
             )
         }
 
         # Com o usuário autenticado, basta gerar um novo jwt com tempo de expiração bem definido
 
         access_token_expire_delta = timedelta(
-            seconds=environment.ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS
+            seconds=self.environment.ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS
         )
 
-        access_token = self.gena_token(
+        access_token = UsuarioService.gera_token(
             data_to_encode=access_token_before_encode,
             expires_delta=access_token_expire_delta,
-            secret_key=environment.ACCESS_TOKEN_SECRET_KEY,
-            algorithm=environment.ACCESS_TOKEN_ALGORITHM
+            secret_key=self.environment.ACCESS_TOKEN_SECRET_KEY,
+            algorithm=self.environment.ACCESS_TOKEN_ALGORITHM
         )
 
         return {
             'token_type': 'Bearer',
-            'expires_in': environment.ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS,
+            'expires_in': self.environment.ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS,
             'access_token': access_token
         }
 
@@ -303,7 +293,7 @@ class UsuarioService:
             )
         ]
 
-        usuarios_db = await self.repo.find_usuarios_by_filtros(filtros)
+        usuarios_db = await self.user_repo.find_usuarios_by_filtros(filtros)
 
         if len(usuarios_db):
             conflict_user = usuarios_db[0]
@@ -320,10 +310,10 @@ class UsuarioService:
         # para inserção no banco de dados
 
         novo_usuario_dict = usuario_input.convert_to_dict()
-        novo_usuario_dict['hashed_password'] = self.criptografa_senha(usuario_input.password)
+        novo_usuario_dict['hashed_password'] = UsuarioService.criptografa_senha(usuario_input.password)
         del novo_usuario_dict['password']
 
         # Insere no banco de dados e retorna o usuário
 
-        return await self.repo.insere_usuario(novo_usuario_dict)
+        return await self.user_repo.insere_usuario(novo_usuario_dict)
 

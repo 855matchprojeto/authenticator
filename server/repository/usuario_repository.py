@@ -2,13 +2,15 @@ from server.configuration.db import AsyncSession
 from server.models.usuario_model import Usuario
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select, insert, literal_column
-from typing import List
+from typing import List, Optional
+from server.configuration.environment import Environment
 
 
 class UsuarioRepository:
 
-    def __init__(self, db_session: AsyncSession):
+    def __init__(self, db_session: AsyncSession, environment: Optional[Environment]):
         self.db_session = db_session
+        self.environment = environment
 
     async def insere_usuario(self, usuario_dict: dict) -> Usuario:
         stmt = (
@@ -31,7 +33,7 @@ class UsuarioRepository:
             select(Usuario).
             where(*filtros).
             options(
-                selectinload(Usuario.funcoes)
+                selectinload(Usuario.vinculos_usuario_funcao)
             )
         )
         query = await self.db_session.execute(stmt)

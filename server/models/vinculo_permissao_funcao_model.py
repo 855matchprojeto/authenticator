@@ -19,6 +19,6 @@ class VinculoPermissaoFuncao(db.Base, AuthenticatorBase):
     id_permissao = Column(BigInteger, ForeignKey("tb_permissao.id"))
     id_funcao = Column(BigInteger, ForeignKey("tb_funcao.id"))
 
-    funcao = relationship('Funcao', back_populates='permissoes')
-    permissao = relationship('Permissao', back_populates='funcoes')
+    funcao = relationship('Funcao', back_populates='vinculos_permissao_funcao')
+    permissao = relationship('Permissao', back_populates='vinculos_permissao_funcao')
 

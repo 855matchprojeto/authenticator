@@ -9,6 +9,12 @@ from server.configuration import environment, exceptions
 from pydantic import ValidationError
 from server.schemas.token_shema import DecodedAccessToken
 from server.repository.permissao_repository import PermissaoRepository
+from starlette_context import context
+from server.configuration.custom_logging import get_main_logger
+from server.dependencies.get_environment_cached import get_environment_cached
+
+
+MAIN_LOGGER = get_main_logger()
 
 
 async def get_current_user(
@@ -16,6 +22,7 @@ async def get_current_user(
     session: AsyncSession = Depends(get_session),
     token: str = Depends(oauth2_scheme),
 ) -> CurrentUser:
+
     """
         Verifique se o token foi expirado ou é inválido
 
@@ -26,6 +33,9 @@ async def get_current_user(
         Se as condições forem satisfeitas, retorna o usuário
         atual, que fez a requisição
     """
+
+    MAIN_LOGGER.info("Início da rotina de decodificação de token do usuário")
+    environment = get_environment_cached()
 
     try:
         decoded_token_dict = jwt.decode(
@@ -59,5 +69,11 @@ async def get_current_user(
     }
 
     current_user = CurrentUser(**user_dict)
+
+    # Determina o contexto para que o usuário possa ser recuperado globalmente
+    context.data['current_user'] = current_user
+
+    MAIN_LOGGER.info("Fim da rotina de decodificação de token de usuário. O usuário foi autenticado e autorizado")
+
     return current_user
 
