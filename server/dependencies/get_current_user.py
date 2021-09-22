@@ -11,6 +11,7 @@ from server.schemas.token_shema import DecodedAccessToken
 from server.repository.permissao_repository import PermissaoRepository
 from starlette_context import context
 from server.configuration.custom_logging import get_main_logger
+from server.dependencies.get_environment_cached import get_environment_cached
 
 
 MAIN_LOGGER = get_main_logger()
@@ -34,6 +35,7 @@ async def get_current_user(
     """
 
     MAIN_LOGGER.info("Início da rotina de decodificação de token do usuário")
+    environment = get_environment_cached()
 
     try:
         decoded_token_dict = jwt.decode(

@@ -1,5 +1,5 @@
 db-run:
-	docker run --rm  --name  db_mc855_authenticator -p 5438:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=1234 -e POSTGRES_DB=db_mc855_authenticator -d postgres
+	docker run --rm  --name  db_mc855_authenticator -p 5940:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=1234 -e POSTGRES_DB=db_mc855_authenticator -d postgres
 
 db-stop:
 	docker stop postgres
