@@ -3,6 +3,7 @@ import pathlib
 import os
 import docker
 import time
+from server.configuration.environment import IntegrationTestEnvironment
 from server.dependencies.get_environment_cached import get_environment_cached
 from server.dependencies.session import get_session
 from alembic.command import upgrade as alembic_upgrade
@@ -19,15 +20,20 @@ from server.models.permissao_model import Permissao
 from server.models.vinculo_permissao_funcao_model import VinculoPermissaoFuncao
 
 
+@lru_cache
+def get_test_environment_cached():
+    return IntegrationTestEnvironment()
+
+
 def create_test_async_engine_cached():
-    environment = get_environment_cached()
+    environment = get_test_environment_cached()
     return create_async_engine(
-        environment.get_test_db_conn_async(
-            test_db_host=environment.TEST_DB_HOST,
-            test_db_name=environment.TEST_DB_NAME,
-            test_db_port=environment.TEST_DB_PORT,
-            test_db_pass=environment.TEST_DB_PASS,
-            test_db_user=environment.TEST_DB_USER
+        environment.get_db_conn_async(
+            db_host=environment.TEST_DB_HOST,
+            db_name=environment.TEST_DB_NAME,
+            db_port=environment.TEST_DB_PORT,
+            db_pass=environment.TEST_DB_PASS,
+            db_user=environment.TEST_DB_USER
         ),
     )
 
@@ -61,7 +67,7 @@ async def get_test_async_session():
 @pytest.fixture()
 def db_docker_container():
 
-    environment = get_environment_cached()
+    environment = get_test_environment_cached()
 
     docker_client = docker.from_env()
     postgres_docker_container = docker_client.containers.run(
@@ -110,18 +116,10 @@ def cwd_to_root():
 
 @pytest.fixture()
 async def create_db_upgrade(cwd_to_root, db_docker_container):
-    environment = get_environment_cached()
-    test_database_url = environment.get_test_db_conn_default(
-        test_db_host=environment.TEST_DB_HOST,
-        test_db_name=environment.TEST_DB_NAME,
-        test_db_port=environment.TEST_DB_PORT,
-        test_db_pass=environment.TEST_DB_PASS,
-        test_db_user=environment.TEST_DB_USER
-    )
+
+    environment = get_test_environment_cached()
 
     alembic_config = AlembicConfig("alembic.ini")
-
-    alembic_config.set_main_option('sqlalchemy.url', test_database_url)
     alembic_upgrade(alembic_config, 'head')
 
     try:
@@ -148,46 +146,47 @@ async def write_permissions_db():
     session_maker = build_test_async_session_maker()
 
     async with session_maker() as session:
-        async with session.begin():
 
-            # Criando função F1 -> Ligada a várias permissoes (P1, P2, P3)
+        # Criando função F1 -> Ligada a várias permissoes (P1, P2, P3)
 
-            funcao1 = Funcao(nome="F1")
-            perm1 = Permissao(nome='P1')
-            perm2 = Permissao(nome='P2')
-            perm3 = Permissao(nome='P3')
+        funcao1 = Funcao(nome="F1")
+        perm1 = Permissao(nome='P1')
+        perm2 = Permissao(nome='P2')
+        perm3 = Permissao(nome='P3')
 
-            session.add_all([funcao1, perm1, perm2, perm3])
-            await session.flush()
+        session.add_all([funcao1, perm1, perm2, perm3])
+        await session.flush()
 
-            for perm in [perm1, perm2, perm3]:
-                session.add(
-                    VinculoPermissaoFuncao(
-                        id_funcao=funcao1.id,
-                        id_permissao=perm.id
-                    )
-                )
-
-            await session.flush()
-
-            # Criando função F2 -> Ligada apenas a uma permissao P4
-
-            funcao2 = Funcao(nome="F2")
-            perm4 = Permissao(nome='P4')
-            session.add_all([funcao2, perm4])
-            await session.flush()
-
+        for perm in [perm1, perm2, perm3]:
             session.add(
                 VinculoPermissaoFuncao(
-                    id_funcao=funcao2.id,
-                    id_permissao=perm4.id
+                    id_funcao=funcao1.id,
+                    id_permissao=perm.id
                 )
             )
 
-            # Criando função F3 -> Não está ligada a nenhuma permissão
+        await session.flush()
 
-            session.add(
-                Funcao(nome="F3")
+        # Criando função F2 -> Ligada apenas a uma permissao P4
+
+        funcao2 = Funcao(nome="F2")
+        perm4 = Permissao(nome='P4')
+        session.add_all([funcao2, perm4])
+        await session.flush()
+
+        session.add(
+            VinculoPermissaoFuncao(
+                id_funcao=funcao2.id,
+                id_permissao=perm4.id
             )
+        )
 
-            await session.flush()
+        # Criando função F3 -> Não está ligada a nenhuma permissão
+
+        session.add(
+            Funcao(nome="F3")
+        )
+
+        await session.flush()
+        await session.commit()
+        await session.close()

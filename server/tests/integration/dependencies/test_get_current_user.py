@@ -107,6 +107,12 @@ class TestUsuarioService:
         ('teste', 'teste@teste.com.br', uuid.uuid4().__str__(), ['1', '2'], 'Teste', all_perms),
     ]
 
+    # username, email, guid, roles, name, security_scopes_overrider
+    NOT_ENOUGH_PERMISSION_DATA = [
+        ('teste', 'teste@teste.com.br', uuid.uuid4().__str__(), ['2', '3'], 'Teste', all_perms),
+        ('teste', 'teste@teste.com.br', uuid.uuid4().__str__(), ['1'], 'Teste', all_perms),
+    ]
+
     @staticmethod
     @pytest.mark.asyncio
     def test_get_current_user_no_headers(_test_app_default_environment: FastAPI, _test_client: TestClient):
@@ -127,7 +133,7 @@ class TestUsuarioService:
                 Authorization=f"Bearer {current_user_token_wrong_secret}"
             ),
         )
-        # assert response.status_code == 401
+        assert response.status_code == 401
 
     @staticmethod
     @pytest.mark.asyncio
@@ -140,7 +146,7 @@ class TestUsuarioService:
                 Authorization=f"Bearer {current_user_token_expired}"
             ),
         )
-        # assert response.status_code == 401
+        assert response.status_code == 401
 
     @staticmethod
     @pytest.mark.asyncio
@@ -158,6 +164,7 @@ class TestUsuarioService:
         assert response.status_code == 401
 
     @staticmethod
+    @pytest.mark.asyncio
     @pytest.mark.parametrize("username, email, guid, roles, name, security_scopes_overrider",
                              ENOUGH_PERMISSION_DATA)
     def test_current_user_enough_permissions(
@@ -189,4 +196,38 @@ class TestUsuarioService:
         )
 
         assert response.status_code == 200
+
+    @staticmethod
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("username, email, guid, roles, name, security_scopes_overrider",
+                             NOT_ENOUGH_PERMISSION_DATA)
+    def test_current_user_not_enough_permissions(
+            _test_app_default_environment: FastAPI, _test_client: TestClient,
+            username, email, guid, roles, security_scopes_overrider,
+            name
+    ):
+        _test_app_default_environment.dependency_overrides[get_security_scopes] = security_scopes_overrider
+
+        data_to_encode = dict(
+            username=username,
+            email=email,
+            guid=guid,
+            roles=roles,
+            name=name
+        )
+
+        usr_token = jwt.encode(
+            data_to_encode,
+            'secret',
+            algorithm="HS256"
+        )
+
+        response = _test_client.get(
+            'users',
+            headers=dict(
+                Authorization=f"Bearer {usr_token}"
+            ),
+        )
+
+        assert response.status_code == 401
 

@@ -17,7 +17,7 @@ class FuncaoRepository:
             select(Funcao).
             where(*filtros).
             options(
-                selectinload("vinculos_permissao_funcao"),
+                selectinload(Funcao.vinculos_permissao_funcao),
             )
         )
         query = await self.db_session.execute(stmt)
