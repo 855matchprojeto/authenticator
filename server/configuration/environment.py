@@ -59,8 +59,9 @@ class Environment(BaseSettings):
                                  test_db_name: str, test_db_port: str):
         return f"postgresql://{test_db_user}:{test_db_pass}@{test_db_host}:{test_db_port}/{test_db_name}"
 
+    @staticmethod
     def get_test_db_conn_async(test_db_host: str, test_db_user: str, test_db_pass: str,
-                                 test_db_name: str, test_db_port: str):
+                               test_db_name: str, test_db_port: str):
         return f"postgresql+asyncpg://{test_db_user}:{test_db_pass}@{test_db_host}:{test_db_port}/{test_db_name}"
 
     class Config:
