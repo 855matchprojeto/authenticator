@@ -5,8 +5,9 @@ from sqlalchemy import pool
 
 from alembic import context
 from server.configuration.db import Base
+from server.dependencies.get_environment_cached import get_environment_cached
 from sqlalchemy import create_engine
-from server.configuration.environment import MigrationEnvironment
+
 
 
 # this is the Alembic Config object, which provides
@@ -41,13 +42,13 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    environment = MigrationEnvironment()
-    return environment.get_db_conn_default(
-        db_host=environment.MIGRATION_DB_HOST,
-        db_name=environment.MIGRATION_DB_NAME,
-        db_port=environment.MIGRATION_DB_PORT,
-        db_pass=environment.MIGRATION_DB_PASS,
-        db_user=environment.MIGRATION_DB_USER
+    environment = get_environment_cached()
+    return environment.get_test_db_conn_default(
+        test_db_host=environment.TEST_DB_HOST,
+        test_db_name=environment.TEST_DB_NAME,
+        test_db_port=environment.TEST_DB_PORT,
+        test_db_pass=environment.TEST_DB_PASS,
+        test_db_user=environment.TEST_DB_USER
     )
 
 

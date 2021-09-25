@@ -13,7 +13,7 @@ class Funcao(db.Base, AuthenticatorBase):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     nome = Column(String(), nullable=False, unique=True)
-    descricao = Column(String(), unique=True)
+    descricao = Column(String(), nullable=False, unique=True)
 
     vinculos_usuario_funcao = relationship(
         'VinculoUsuarioFuncao',
