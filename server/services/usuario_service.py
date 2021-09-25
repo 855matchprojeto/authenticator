@@ -77,11 +77,6 @@ class UsuarioService:
             É verificado se o usuário existe e se a senha está correta
         """
 
-        funcao_repo = FuncaoRepository(
-            db_session=self.user_repo.db_session,
-            environment=None
-        )
-
         user: List[Usuario] = await self.user_repo.find_usuarios_by_filtros([Usuario.username == username])
         if len(user) == 0 or not UsuarioService.verifica_senha(password, user[0].hashed_password):
             raise exceptions.InvalidUsernamePasswordException()

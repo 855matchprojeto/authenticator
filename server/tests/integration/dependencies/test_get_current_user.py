@@ -2,13 +2,18 @@ import pytest
 import uuid
 from fastapi import FastAPI
 from server.tests.integration import db_docker_container, cwd_to_root, create_db_upgrade, _test_client, \
-    _test_app, _test_app_default_environment, get_test_async_session, write_permissions_db
+    _test_app, _test_app_default_environment, get_test_async_session
 from fastapi.testclient import TestClient
 from jose import jwt
 from datetime import datetime, timedelta
 from fastapi.security import SecurityScopes
 from server.dependencies.get_security_scopes import get_security_scopes
 from mock import Mock
+from server.tests.integration import build_test_async_session_maker
+from server.models.permissao_model import Permissao
+from server.models.funcao_model import Funcao
+from server.models.vinculo_permissao_funcao_model import VinculoPermissaoFuncao
+from httpx import AsyncClient
 
 
 def all_perms():
@@ -17,6 +22,64 @@ def all_perms():
         scopes=perms,
         scope_str=",".join(perms)
     )
+
+
+@pytest.fixture
+async def write_mock_permissions_db():
+    """
+        Criando permissões e funções MOCK para o banco de dados
+        (F1 -> P1, P2, P3)
+        (F2 -> P4)
+        (F3 -> )
+    """
+
+    session_maker = build_test_async_session_maker()
+
+    async with session_maker() as session:
+
+        # Criando função F1 -> Ligada a várias permissoes (P1, P2, P3)
+
+        funcao1 = Funcao(nome="F1")
+        perm1 = Permissao(nome='P1')
+        perm2 = Permissao(nome='P2')
+        perm3 = Permissao(nome='P3')
+
+        session.add_all([funcao1, perm1, perm2, perm3])
+        await session.flush()
+
+        for perm in [perm1, perm2, perm3]:
+            session.add(
+                VinculoPermissaoFuncao(
+                    id_funcao=funcao1.id,
+                    id_permissao=perm.id
+                )
+            )
+
+        await session.flush()
+
+        # Criando função F2 -> Ligada apenas a uma permissao P4
+
+        funcao2 = Funcao(nome="F2")
+        perm4 = Permissao(nome='P4')
+        session.add_all([funcao2, perm4])
+        await session.flush()
+
+        session.add(
+            VinculoPermissaoFuncao(
+                id_funcao=funcao2.id,
+                id_permissao=perm4.id
+            )
+        )
+
+        # Criando função F3 -> Não está ligada a nenhuma permissão
+
+        session.add(
+            Funcao(nome="F3")
+        )
+
+        await session.flush()
+        await session.commit()
+        await session.close()
 
 
 @pytest.fixture
@@ -115,62 +178,89 @@ class TestUsuarioService:
 
     @staticmethod
     @pytest.mark.asyncio
-    def test_get_current_user_no_headers(_test_app_default_environment: FastAPI, _test_client: TestClient):
+    async def test_get_current_user_no_headers(_test_app_default_environment: FastAPI, _test_client: TestClient):
 
-        response = _test_client.get(
-            'users',
-        )
-        assert response.status_code == 401
+        async with AsyncClient(
+                app=_test_app_default_environment,
+                base_url='http://test'
+        ) as test_async_client:
+
+            test_async_client: AsyncClient
+
+            response = await test_async_client.get(
+                'users',
+            )
+            assert response.status_code == 401
 
     @staticmethod
     @pytest.mark.asyncio
-    def test_get_current_user_wrong_secret(_test_app_default_environment: FastAPI, _test_client: TestClient,
+    async def test_get_current_user_wrong_secret(_test_app_default_environment: FastAPI, _test_client: TestClient,
                                            current_user_token_wrong_secret):
 
-        response = _test_client.get(
-            'users',
-            headers=dict(
-                Authorization=f"Bearer {current_user_token_wrong_secret}"
-            ),
-        )
+        async with AsyncClient(
+                app=_test_app_default_environment,
+                base_url='http://test'
+        ) as test_async_client:
+
+            test_async_client: AsyncClient
+
+            response = await test_async_client.get(
+                'users',
+                headers=dict(
+                    Authorization=f"Bearer {current_user_token_wrong_secret}"
+                ),
+            )
         assert response.status_code == 401
 
     @staticmethod
     @pytest.mark.asyncio
-    def test_get_current_user_expired_token(_test_app_default_environment: FastAPI, _test_client: TestClient,
+    async def test_get_current_user_expired_token(_test_app_default_environment: FastAPI, _test_client: TestClient,
                                             current_user_token_expired):
 
-        response = _test_client.get(
-            'users',
-            headers=dict(
-                Authorization=f"Bearer {current_user_token_expired}"
-            ),
-        )
-        assert response.status_code == 401
+        async with AsyncClient(
+                app=_test_app_default_environment,
+                base_url='http://test'
+        ) as test_async_client:
+
+            test_async_client: AsyncClient
+
+            response = await test_async_client.get(
+                'users',
+                headers=dict(
+                    Authorization=f"Bearer {current_user_token_expired}"
+                ),
+            )
+            assert response.status_code == 401
 
     @staticmethod
     @pytest.mark.asyncio
-    def test_get_current_user_wrong_schema_validation(
+    async def test_get_current_user_wrong_schema_validation(
         _test_app_default_environment: FastAPI, _test_client: TestClient,
         current_user_wrong_schema
     ):
+        async with AsyncClient(
+                app=_test_app_default_environment,
+                base_url='http://test'
+        ) as test_async_client:
 
-        response = _test_client.get(
-            'users',
-            headers=dict(
-                Authorization=f"Bearer {current_user_wrong_schema}"
-            ),
-        )
-        assert response.status_code == 401
+            test_async_client: AsyncClient
+
+            response = await test_async_client.get(
+                'users',
+                headers=dict(
+                    Authorization=f"Bearer {current_user_wrong_schema}"
+                ),
+            )
+            assert response.status_code == 401
 
     @staticmethod
     @pytest.mark.asyncio
     @pytest.mark.parametrize("username, email, guid, roles, name, security_scopes_overrider",
                              ENOUGH_PERMISSION_DATA)
-    def test_current_user_enough_permissions(
+    async def test_current_user_enough_permissions(
             _test_app_default_environment: FastAPI, _test_client: TestClient,
             username, email, guid, roles, security_scopes_overrider,
-            name
+            name, write_mock_permissions_db
     ):
         _test_app_default_environment.dependency_overrides[get_security_scopes] = security_scopes_overrider
 
@@ -188,23 +278,30 @@ class TestUsuarioService:
             algorithm="HS256"
         )
 
-        response = _test_client.get(
-            'users',
-            headers=dict(
-                Authorization=f"Bearer {usr_token}"
-            ),
-        )
+        async with AsyncClient(
+                app=_test_app_default_environment,
+                base_url='http://test'
+        ) as test_async_client:
 
-        assert response.status_code == 200
+            test_async_client: AsyncClient
+
+            response = await test_async_client.get(
+                'users',
+                headers=dict(
+                    Authorization=f"Bearer {usr_token}"
+                ),
+            )
+
+            assert response.status_code == 200
 
     @staticmethod
     @pytest.mark.asyncio
     @pytest.mark.parametrize("username, email, guid, roles, name, security_scopes_overrider",
                              NOT_ENOUGH_PERMISSION_DATA)
-    def test_current_user_not_enough_permissions(
+    async def test_current_user_not_enough_permissions(
             _test_app_default_environment: FastAPI, _test_client: TestClient,
             username, email, guid, roles, security_scopes_overrider,
-            name
+            name, write_mock_permissions_db
     ):
         _test_app_default_environment.dependency_overrides[get_security_scopes] = security_scopes_overrider
 
@@ -222,12 +319,19 @@ class TestUsuarioService:
             algorithm="HS256"
         )
 
-        response = _test_client.get(
-            'users',
-            headers=dict(
-                Authorization=f"Bearer {usr_token}"
-            ),
-        )
+        async with AsyncClient(
+                app=_test_app_default_environment,
+                base_url='http://test'
+        ) as test_async_client:
 
-        assert response.status_code == 401
+            test_async_client: AsyncClient
+
+            response = await test_async_client.get(
+                'users',
+                headers=dict(
+                    Authorization=f"Bearer {usr_token}"
+                ),
+            )
+
+            assert response.status_code == 401
 

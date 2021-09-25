@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 
 class FuncaoRepository:
 
-    def __init__(self, db_session: AsyncSession, environment: Optional[Environment]):
+    def __init__(self, db_session: AsyncSession, environment: Optional[Environment] = None):
         self.db_session = db_session
         self.environment = environment
 

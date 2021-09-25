@@ -41,8 +41,6 @@ async def get_current_user(
 
         MAIN_LOGGER.info("Início da rotina de decodificação de token do usuário")
 
-        await PermissaoRepository(session).find_permissions_by_roles_list([])
-
         try:
             decoded_token_dict = jwt.decode(
                 token,
@@ -57,6 +55,7 @@ async def get_current_user(
         roles = [int(role) for role in decoded_token.roles]
 
         user_permissions = await permission_repo.find_permissions_by_roles_list(roles)
+
         user_permissions_names = [permission.nome for permission in user_permissions]
 
         for required_permission_scope in required_security_permission_scopes.scopes:

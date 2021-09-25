@@ -3,6 +3,7 @@ import pathlib
 import os
 import docker
 import time
+import asyncio
 from server.configuration.environment import IntegrationTestEnvironment
 from server.dependencies.get_environment_cached import get_environment_cached
 from server.dependencies.session import get_session
@@ -15,9 +16,6 @@ from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from mock import Mock
 from fastapi import FastAPI
-from server.models.funcao_model import Funcao
-from server.models.permissao_model import Permissao
-from server.models.vinculo_permissao_funcao_model import VinculoPermissaoFuncao
 
 
 @lru_cache
@@ -25,7 +23,7 @@ def get_test_environment_cached():
     return IntegrationTestEnvironment()
 
 
-def create_test_async_engine_cached():
+def create_test_async_engine():
     environment = get_test_environment_cached()
     return create_async_engine(
         environment.get_db_conn_async(
@@ -40,7 +38,7 @@ def create_test_async_engine_cached():
 
 def build_test_async_session_maker():
     return sessionmaker(
-        create_test_async_engine_cached(),
+        create_test_async_engine(),
         expire_on_commit=False,
         class_=AsyncSession
     )
@@ -64,8 +62,8 @@ async def get_test_async_session():
         yield session
 
 
-@pytest.fixture()
-def db_docker_container():
+@pytest.fixture
+async def db_docker_container():
 
     environment = get_test_environment_cached()
 
@@ -85,108 +83,63 @@ def db_docker_container():
         }
     )
 
-    time.sleep(1.5)
+    docker_start_sleep_time = 0.5
+    max_retries = 10
+    await asyncio.sleep(docker_start_sleep_time)
+    exec_res = postgres_docker_container.exec_run(
+        cmd='pg_isready'
+    )
+
+    retries = 0
+    while exec_res.exit_code != 0 and retries != max_retries:
+        print(retries)
+        await asyncio.sleep(docker_start_sleep_time)
+        exec_res = postgres_docker_container.exec_run(
+            cmd='pg_isready'
+        )
+        print(exec_res.exit_code)
+        retries += 1
+
+    try:
+        assert retries != max_retries
+    except Exception as ex:
+        postgres_docker_container.stop()
+        raise ex
 
     return postgres_docker_container
 
 
-@pytest.fixture()
+@pytest.fixture
 def _test_app(create_db_upgrade):
     app = _init_app()
     app.dependency_overrides[get_session] = get_test_async_session
     return app
 
 
-@pytest.fixture()
+@pytest.fixture
 def _test_client(_test_app):
     return TestClient(_test_app)
 
 
-@pytest.fixture()
+@pytest.fixture
 def _test_app_default_environment(_test_app: FastAPI) -> FastAPI:
     _test_app.dependency_overrides[get_environment_cached] = mock_default_environment_variables
     return _test_app
 
 
-@pytest.fixture()
+@pytest.fixture
 def cwd_to_root():
     root_path = pathlib.Path(__file__).parents[3]
     os.chdir(root_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 async def create_db_upgrade(cwd_to_root, db_docker_container):
-
-    environment = get_test_environment_cached()
 
     alembic_config = AlembicConfig("alembic.ini")
     alembic_upgrade(alembic_config, 'head')
-
-    try:
-        await write_permissions_db()
-    except Exception as ex:
-        db_docker_container.stop()
-        raise ex
 
     yield
 
     db_docker_container.stop()
 
-    time.sleep(1)
-
-
-async def write_permissions_db():
-    """
-        Criando permissões e funções MOCK para o banco de dados
-        (F1 -> P1, P2, P3)
-        (F2 -> P4)
-        (F3 -> )
-    """
-
-    session_maker = build_test_async_session_maker()
-
-    async with session_maker() as session:
-
-        # Criando função F1 -> Ligada a várias permissoes (P1, P2, P3)
-
-        funcao1 = Funcao(nome="F1")
-        perm1 = Permissao(nome='P1')
-        perm2 = Permissao(nome='P2')
-        perm3 = Permissao(nome='P3')
-
-        session.add_all([funcao1, perm1, perm2, perm3])
-        await session.flush()
-
-        for perm in [perm1, perm2, perm3]:
-            session.add(
-                VinculoPermissaoFuncao(
-                    id_funcao=funcao1.id,
-                    id_permissao=perm.id
-                )
-            )
-
-        await session.flush()
-
-        # Criando função F2 -> Ligada apenas a uma permissao P4
-
-        funcao2 = Funcao(nome="F2")
-        perm4 = Permissao(nome='P4')
-        session.add_all([funcao2, perm4])
-        await session.flush()
-
-        session.add(
-            VinculoPermissaoFuncao(
-                id_funcao=funcao2.id,
-                id_permissao=perm4.id
-            )
-        )
-
-        # Criando função F3 -> Não está ligada a nenhuma permissão
-
-        session.add(
-            Funcao(nome="F3")
-        )
-
-        await session.flush()
-        await session.commit()
-        await session.close()

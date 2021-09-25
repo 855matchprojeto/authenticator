@@ -13,6 +13,5 @@ class RequestPlugin(Plugin):
     ) -> Optional[Any]:
         return {
             "request": request,
-            "request_id": uuid.uuid4().__str__()
         }
 
