@@ -7,7 +7,7 @@ from server.dependencies.get_environment_cached import get_environment_cached
 Base = declarative_base()
 
 
-@lru_cache
+@lru_cache()
 def create_async_engine_cached():
     environment = get_environment_cached()
     return create_async_engine(

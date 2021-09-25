@@ -13,7 +13,7 @@ class Permissao(db.Base, AuthenticatorBase):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     nome = Column(String(), nullable=False, unique=True)
-    descricao = Column(String(), unique=True)
+    descricao = Column(String(), nullable=False, unique=True)
 
     vinculos_permissao_funcao = relationship(
         'VinculoPermissaoFuncao',

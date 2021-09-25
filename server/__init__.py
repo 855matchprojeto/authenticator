@@ -22,7 +22,12 @@ def _init_app():
     app = configura_middlewares(app)
     configura_logger()
     configura_routers(app)
+    configura_async_engine()
     return app
+
+
+def configura_async_engine():
+    db.create_async_engine_cached()
 
 
 def configura_logger():

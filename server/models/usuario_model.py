@@ -16,7 +16,7 @@ class Usuario(db.Base, AuthenticatorBase):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     guid = Column(UUID(as_uuid=True), nullable=False, unique=True, default=uuid.uuid4)
-    nome = Column(String(), nullable=False)
+    nome = Column(String())
     username = Column(String(), unique=True, nullable=False)
     hashed_password = Column(String(), nullable=False)
     email = Column(String(), unique=True, nullable=False)

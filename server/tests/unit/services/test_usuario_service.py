@@ -110,7 +110,7 @@ def verify_email_token_expired():
     data_to_encode = dict(
         email="teste@unicamp.br",
         username="user",
-        name="Teste",
+        name = "Teste",
         exp=timestamp_exp
     )
 
