@@ -22,10 +22,11 @@ class RequestFilter(logging.Filter):
         if context.exists():
             request_dict = context.data.get('request', None)
             request: HTTPConnection = request_dict['request'] if request_dict else None
-            request_id = request_dict['request_id'] if request_dict else None
             record.request_method = request.scope['method'] if request else None
             record.request_path = request.scope['path'] if request else None
-            record.request_id = request_id if request_dict else None
+
+            request_id = context.data.get('X-Request-ID', None)
+            record.request_id = request_id
             return True
         return False
 

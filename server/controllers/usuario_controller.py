@@ -15,7 +15,7 @@ from fastapi import status
 from server.repository.usuario_repository import UsuarioRepository
 from server.configuration.environment import Environment
 from server.services.email_service import EmailService
-from server.dependencies.get_email_sender_service_cached import get_email_sender_service_cached
+from server.dependencies.get_email_sender_service import get_email_sender_service
 
 
 router = APIRouter()
@@ -29,8 +29,10 @@ usuario_router = dict(
 @router.get("", response_model=List[usuario_schema.UsuarioOutput])
 @session_exception_handler
 async def get_all_users(
-        _: usuario_schema.CurrentUser = Security(get_current_user, scopes=[RoleBasedPermission.READ_ALL_USERS['name']]),
-        session: AsyncSession = Depends(get_session), environment: Environment = Depends(get_environment_cached)):
+    _: usuario_schema.CurrentUser = Security(get_current_user, scopes=[RoleBasedPermission.READ_ALL_USERS['name']]),
+    session: AsyncSession = Depends(get_session),
+    environment: Environment = Depends(get_environment_cached)
+):
 
     service = UsuarioService(
         UsuarioRepository(session, environment),
@@ -41,8 +43,11 @@ async def get_all_users(
 
 @router.post("", response_model=usuario_schema.UsuarioOutput)
 @session_exception_handler
-async def post_novo_usuario(usuario_input: usuario_schema.UsuarioInput, session: AsyncSession = Depends(get_session),
-                            environment: Environment = Depends(get_environment_cached)):
+async def post_novo_usuario(
+    usuario_input: usuario_schema.UsuarioInput,
+    session: AsyncSession = Depends(get_session),
+    environment: Environment = Depends(get_environment_cached)
+):
 
     service = UsuarioService(
         UsuarioRepository(session, environment),
@@ -53,9 +58,11 @@ async def post_novo_usuario(usuario_input: usuario_schema.UsuarioInput, session:
 
 @router.post("/token", response_model=token_shema.AccessTokenOutput)
 @session_exception_handler
-async def get_login_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
-                                 session: AsyncSession = Depends(get_session),
-                                 environment: Environment = Depends(get_environment_cached)):
+async def get_login_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_session),
+    environment: Environment = Depends(get_environment_cached)
+):
 
     service = UsuarioService(
         UsuarioRepository(session, environment),
@@ -64,13 +71,13 @@ async def get_login_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return await service.gera_novo_token_login(form_data)
 
 
-@router.post("/{username}/send-email-verification-link", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/send-email-verification-link/{username}", status_code=status.HTTP_204_NO_CONTENT)
 @session_exception_handler
 async def send_email_verification_link(
-        username: str,
-        session: AsyncSession = Depends(get_session),
-        environment: Environment = Depends(get_environment_cached),
-        email_sender_service: EmailService = Depends(get_email_sender_service_cached)
+    username: str,
+    session: AsyncSession = Depends(get_session),
+    environment: Environment = Depends(get_environment_cached),
+    email_sender_service: EmailService = Depends(get_email_sender_service)
 ):
 
     service = UsuarioService(
@@ -84,8 +91,11 @@ async def send_email_verification_link(
 
 @router.get("/verify-email", include_in_schema=False, response_class=HTMLResponse)
 @session_exception_handler
-async def verify_email(request: Request, code: str, session: AsyncSession = Depends(get_session),
-                       environment: Environment = Depends(get_environment_cached)):
+async def verify_email(
+    request: Request, code: str,
+    session: AsyncSession = Depends(get_session),
+    environment: Environment = Depends(get_environment_cached)
+):
 
     service = UsuarioService(
         UsuarioRepository(session, environment),
