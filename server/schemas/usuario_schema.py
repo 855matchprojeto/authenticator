@@ -6,10 +6,10 @@ from typing import List
 
 class UsuarioInput(AuthenticatorModelInput):
 
-    nome: str
-    username: str
-    password: str
-    email: EmailStr
+    nome: str = Field(example='Teste')
+    username: str = Field(example='username')
+    password: str = Field(example='password')
+    email: EmailStr = Field(example="teste@unicamp.br")
 
     def convert_to_dict(self):
         return self.dict()
@@ -21,9 +21,9 @@ class UsuarioInput(AuthenticatorModelInput):
 
 class UsuarioOutput(AuthenticatorModelOutput):
 
-    nome: str = Field(None)
-    username: str = Field(None)
-    email: EmailStr = Field(None)
+    nome: str = Field(None, example='Teste')
+    username: str = Field(None, example='username')
+    email: EmailStr = Field(None, example="teste@unicamp.br")
     email_verificado: bool = Field(None)
     created_at: datetime = Field(None)
     updated_at: datetime = Field(None)

@@ -1,6 +1,8 @@
+import json
 from fastapi import HTTPException, status
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
 
 class ApiBaseException(HTTPException):
@@ -16,6 +18,17 @@ class ApiBaseException(HTTPException):
         self.error_id = error_id
         self.message = message
         self.detail = detail
+
+
+class RequestValidationException(ApiBaseException):
+    def __init__(
+            self,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            error_id='REQUEST_VALIDATION_ERROR',
+            message='Ocorreu um problema ao validar a requisição',
+            detail=''
+    ) -> None:
+        super().__init__(status_code, error_id, message, detail)
 
 
 class UnprocessableEntityException(ApiBaseException):
@@ -51,11 +64,11 @@ class InvalidEmailException(ApiBaseException):
         super().__init__(status_code, error_id, message, detail)
 
 
-class EmailNotVerifiedException(ApiBaseException):
+class EmailNotConfirmedException(ApiBaseException):
     def __init__(
         self,
         status_code=status.HTTP_401_UNAUTHORIZED,
-        error_id='EMAIL_NOT_VERIFIED',
+        error_id='EMAIL_NOT_CONFIRMED',
         message='Email não verificado',
         detail=''
     ) -> None:
@@ -130,6 +143,13 @@ class NotEnoughPermissionsException(ApiBaseException):
 
 def generic_exception_handler(_: Request, exception: Exception):
     return api_base_exception_handler(_, ApiBaseException())
+
+
+def request_validation_error_handler(_: Request, exception: RequestValidationError):
+    api_base_exception = RequestValidationException(
+        detail=json.dumps(exception.errors())
+    )
+    return api_base_exception_handler(_, api_base_exception)
 
 
 def api_base_exception_handler(_: Request, exception: ApiBaseException):
