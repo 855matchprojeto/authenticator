@@ -8,6 +8,7 @@ from server.configuration.custom_logging import MICROSERVICE_LOGGER_KWARGS, Logg
 from server.middleware.plugins import custom_request_plugin
 from server.configuration import db
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
 
 
 routers = [
@@ -55,6 +56,10 @@ def configura_exception_handlers(app):
     app.add_exception_handler(
         exceptions.InvalidEmailException,
         exceptions.api_base_exception_handler
+    ),
+    app.add_exception_handler(
+        RequestValidationError,
+        exceptions.request_validation_error_handler
     )
     app.add_exception_handler(
         Exception,

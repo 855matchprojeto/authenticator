@@ -488,7 +488,7 @@ class TestUsuarioController:
                 data=form_data
             )
 
-            assert response.status_code == 422
+            assert response.status_code == 401
 
     @staticmethod
     @pytest.mark.asyncio
