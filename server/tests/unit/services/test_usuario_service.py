@@ -354,7 +354,7 @@ class TestUsuarioService:
             user_repo=user_repo_mock
         )
 
-        with pytest.raises(exceptions.InvalidEmailException):
+        with pytest.raises(exceptions.EmailNotConfirmedException):
             await service.gera_novo_token_login(form_data_mock)
 
     @staticmethod
