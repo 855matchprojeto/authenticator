@@ -17,7 +17,8 @@ from fastapi import Request
 from pydantic import ValidationError, EmailStr
 from server.templates import jinja2_templates
 from server.configuration.environment import Environment
-from server.repository.funcao_repository import FuncaoRepository
+from server.schemas.usuario_schema import CurrentUserOutput
+
 
 class UsuarioService:
 
@@ -64,6 +65,15 @@ class UsuarioService:
             secret_key,
             algorithm=algorithm
         )
+
+    @staticmethod
+    def current_user_output(current_user):
+        """
+            Converte o current_user para uma versão
+            sem exposição de dados confidenciais como
+            funções e permissões
+        """
+        return CurrentUserOutput(**current_user.dict())
         
     def __init__(self, user_repo: Optional[UsuarioRepository] = None, environment: Optional[Environment] = None,
                  email_sender_service: Optional[EmailService] = None):
@@ -226,7 +236,7 @@ class UsuarioService:
 
         user: Usuario = await self.autentica_usuario(form_data.username, form_data.password)
         if not user.email_verificado:
-            raise exceptions.InvalidEmailException(
+            raise exceptions.EmailNotConfirmedException(
                 detail=f'O email {user.email} ainda não foi verificado'
             )
 

@@ -8,6 +8,8 @@ from jose import jwt, JWTError
 from mock import Mock, AsyncMock
 from server.configuration import exceptions
 from pydantic import EmailStr
+from server.schemas.usuario_schema import CurrentUserToken
+
 
 """
     Fixtures
@@ -255,6 +257,33 @@ class TestUsuarioService:
             )
 
     @staticmethod
+    @pytest.mark.parametrize('name, username, guid, email, roles, permissions', [
+        ('Teste', 'user', uuid.uuid4().__str__(), 'teste@unicamp.br', ['1'], ['1', '2']),
+        ('Teste', 'user', uuid.uuid4().__str__(), 'teste@unicamp.br', ['1'], []),
+        ('Teste', 'user', uuid.uuid4().__str__(), 'teste@unicamp.br', [], ['1']),
+    ])
+    def test_current_user_output(name, username, guid, email: EmailStr, roles, permissions):
+        curr_user = CurrentUserToken(
+            name=name,
+            username=username,
+            guid=guid,
+            email=email,
+            roles=roles,
+            permissions=permissions
+        )
+
+        curr_user_output = UsuarioService.current_user_output(curr_user)
+        curr_user_output_dict = curr_user_output.dict()
+
+        expected_keys = ['username', 'name', 'guid', 'email']
+        for key in expected_keys:
+            assert key in curr_user_output_dict
+
+        not_expected_keys = ['roles', 'permissions']
+        for key in not_expected_keys:
+            assert key not in curr_user_output_dict
+
+    @staticmethod
     @pytest.mark.parametrize("data_to_encode, secret_key, algorithm, expires_in", [
         ({"key": "value"}, "secret", "HS256", -1),
         ({"key": "value"}, "secret2", "HS512", -3),
@@ -354,7 +383,7 @@ class TestUsuarioService:
             user_repo=user_repo_mock
         )
 
-        with pytest.raises(exceptions.InvalidEmailException):
+        with pytest.raises(exceptions.EmailNotConfirmedException):
             await service.gera_novo_token_login(form_data_mock)
 
     @staticmethod

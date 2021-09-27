@@ -1,7 +1,7 @@
 import logging
 import sys
 from starlette_context import context
-from server.schemas.usuario_schema import CurrentUser
+from server.schemas.usuario_schema import CurrentUserToken
 from typing import List
 from starlette.requests import HTTPConnection
 
@@ -9,7 +9,7 @@ from starlette.requests import HTTPConnection
 class CurrentUserFilter(logging.Filter):
     def filter(self, record: logging.LogRecord):
         if context.exists():
-            current_user: CurrentUser = context.data.get('current_user', None)
+            current_user: CurrentUserToken = context.data.get('current_user', None)
             record.username = current_user.username if current_user else ""
             record.user_email = current_user.email if current_user else ""
             record.user_guid = current_user.guid if current_user else ""

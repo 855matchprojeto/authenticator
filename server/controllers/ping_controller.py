@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Response
-from server.controllers import session_exception_handler
 from fastapi import status
 
 
@@ -11,7 +10,11 @@ ping_router = dict(
 )
 
 
-@router.get("", status_code=status.HTTP_204_NO_CONTENT)
+@router.get(
+    "",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary='Endpoint para testar o microsserviço'
+)
 async def ping():
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
