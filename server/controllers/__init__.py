@@ -14,15 +14,16 @@ from functools import wraps
 MAIN_LOGGER = get_main_logger()
 
 
-def session_exception_handler(func):
+def endpoint_exception_handler(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         MAIN_LOGGER.info("Início do endpoint")
-        session: AsyncSession = kwargs['session']
+        session: AsyncSession = kwargs.get('session', None)
         try:
             result = await func(*args, **kwargs)
             MAIN_LOGGER.info("Fim da rotina do endpoint. Commit da sessão do banco de dados acionado")
-            await session.commit()
+            if session:
+                await session.commit()
             return result
         except ApiBaseException as ex:
             MAIN_LOGGER.warning(
@@ -30,7 +31,8 @@ def session_exception_handler(func):
                 "Rollback da sessão atual do banco de dados acionado",
                 exc_info=True
             )
-            await session.rollback()
+            if session:
+                await session.rollback()
             raise ex
         except Exception as ex:
             MAIN_LOGGER.error(
@@ -38,12 +40,14 @@ def session_exception_handler(func):
                 "Rollback da sessão atual do banco de dados acionado",
                 exc_info=True
             )
-            await session.rollback()
+            if session:
+                await session.rollback()
             raise ex
         finally:
             MAIN_LOGGER.info(
                 "Fim do endpoint e da sessão do banco de dados"
             )
-            await session.close()
+            if session:
+                await session.close()
     return wrapper
 

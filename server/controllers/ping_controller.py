@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Response
-from server.controllers import session_exception_handler
 from fastapi import status
 
 
