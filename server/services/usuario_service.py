@@ -17,6 +17,7 @@ from fastapi import Request
 from pydantic import ValidationError, EmailStr
 from server.templates import jinja2_templates
 from server.configuration.environment import Environment
+from server.schemas.usuario_schema import CurrentUserOutput
 
 
 class UsuarioService:
@@ -64,6 +65,15 @@ class UsuarioService:
             secret_key,
             algorithm=algorithm
         )
+
+    @staticmethod
+    def current_user_output(current_user):
+        """
+            Converte o current_user para uma versão
+            sem exposição de dados confidenciais como
+            funções e permissões
+        """
+        return CurrentUserOutput(**current_user.dict())
         
     def __init__(self, user_repo: Optional[UsuarioRepository] = None, environment: Optional[Environment] = None,
                  email_sender_service: Optional[EmailService] = None):
