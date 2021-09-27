@@ -1,14 +1,14 @@
-from functools import lru_cache
 from fastapi_mail import ConnectionConfig, FastMail
-from server.dependencies.get_environment_cached import get_environment_cached
 from server.services.email_service import EmailService
-from fastapi import BackgroundTasks
+from fastapi import BackgroundTasks, Depends
+from server.dependencies.get_environment_cached import get_environment_cached
+from server.configuration.environment import Environment
 
 
-@lru_cache
-def get_email_sender_service_cached(background_tasks: BackgroundTasks):
-
-    environment = get_environment_cached()
+def get_email_sender_service(
+    background_tasks: BackgroundTasks,
+    environment: Environment = Depends(get_environment_cached)
+):
 
     email_api = FastMail(
         ConnectionConfig(
