@@ -1,7 +1,7 @@
 import pytest
 import uuid
 from fastapi import FastAPI
-from server.tests.integration import db_docker_container, cwd_to_root, create_db_upgrade, _test_client, \
+from server.tests.integration import db_docker_container, cwd_to_root, create_db_upgrade, \
     _test_app, _test_app_default_environment, get_test_async_session
 from fastapi.testclient import TestClient
 from jose import jwt

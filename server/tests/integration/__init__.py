@@ -16,6 +16,8 @@ from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from mock import Mock
 from fastapi import FastAPI
+from sqlalchemy.pool import NullPool
+from sqlalchemy.orm import close_all_sessions
 
 
 @lru_cache
@@ -23,6 +25,7 @@ def get_test_environment_cached():
     return IntegrationTestEnvironment()
 
 
+@lru_cache
 def create_test_async_engine():
     environment = get_test_environment_cached()
     return create_async_engine(
@@ -33,6 +36,8 @@ def create_test_async_engine():
             db_pass=environment.TEST_DB_PASS,
             db_user=environment.TEST_DB_USER
         ),
+        poolclass=NullPool,
+        pool_pre_ping=True
     )
 
 
@@ -46,13 +51,13 @@ def build_test_async_session_maker():
 
 def mock_default_environment_variables():
     return Mock(
+        MAIL_TOKEN_SECRET_KEY='secret',
+        MAIL_TOKEN_ALGORITHM='HS256',
+        MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS=86400,
         ACCESS_TOKEN_SECRET_KEY="secret",
         ACCESS_TOKEN_ALGORITHM="HS256",
         ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS=86400,
-        MAIL_TOKEN_SECRET_KEY="secret",
-        MAIL_TOKEN_ALGORITHM="HS256",
-        MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS=86400,
-        SERVER_DNS="SERVER_DNS"
+        AUTHENTICATOR_DNS="/fake/users/token"
     )
 
 
@@ -60,6 +65,7 @@ async def get_test_async_session():
     session_maker = build_test_async_session_maker()
     async with session_maker() as session:
         yield session
+        await session.close()
 
 
 @pytest.fixture
@@ -83,9 +89,9 @@ async def db_docker_container():
         }
     )
 
-    docker_start_sleep_time = 0.5
+    docker_start_sleep_time = 1
     max_retries = 10
-    await asyncio.sleep(docker_start_sleep_time)
+    time.sleep(docker_start_sleep_time)
     exec_res = postgres_docker_container.exec_run(
         cmd='pg_isready'
     )
@@ -93,7 +99,7 @@ async def db_docker_container():
     retries = 0
     while exec_res.exit_code != 0 and retries != max_retries:
         print(retries)
-        await asyncio.sleep(docker_start_sleep_time)
+        time.sleep(docker_start_sleep_time)
         exec_res = postgres_docker_container.exec_run(
             cmd='pg_isready'
         )
@@ -110,15 +116,10 @@ async def db_docker_container():
 
 
 @pytest.fixture
-def _test_app(create_db_upgrade):
+def _test_app(create_db_upgrade, scope="session"):
     app = _init_app()
     app.dependency_overrides[get_session] = get_test_async_session
     return app
-
-
-@pytest.fixture
-def _test_client(_test_app):
-    return TestClient(_test_app)
 
 
 @pytest.fixture
@@ -128,7 +129,7 @@ def _test_app_default_environment(_test_app: FastAPI) -> FastAPI:
 
 
 @pytest.fixture
-def cwd_to_root():
+def cwd_to_root(scope="session"):
     root_path = pathlib.Path(__file__).parents[3]
     os.chdir(root_path)
 
@@ -137,9 +138,14 @@ def cwd_to_root():
 async def create_db_upgrade(cwd_to_root, db_docker_container):
 
     alembic_config = AlembicConfig("alembic.ini")
-    alembic_upgrade(alembic_config, 'head')
+    try:
+        alembic_upgrade(alembic_config, 'head')
+    except Exception:
+        pass
 
     yield
 
     db_docker_container.stop()
+    close_all_sessions()
+    time.sleep(1)
 
