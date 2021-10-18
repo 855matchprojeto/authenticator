@@ -49,6 +49,9 @@ def build_test_async_session_maker():
 
 def mock_default_environment_variables():
     return Mock(
+        MAIL_TOKEN_SECRET_KEY='secret',
+        MAIL_TOKEN_ALGORITHM='HS256',
+        MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS=86400,
         ACCESS_TOKEN_SECRET_KEY="secret",
         ACCESS_TOKEN_ALGORITHM="HS256",
         ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS=86400,
@@ -60,7 +63,7 @@ async def get_test_async_session():
     session_maker = build_test_async_session_maker()
     async with session_maker() as session:
         yield session
-        session.close()
+        await session.close()
 
 
 @pytest.fixture
@@ -84,7 +87,7 @@ async def db_docker_container():
         }
     )
 
-    docker_start_sleep_time = 0.5
+    docker_start_sleep_time = 1
     max_retries = 10
     await asyncio.sleep(docker_start_sleep_time)
     exec_res = postgres_docker_container.exec_run(

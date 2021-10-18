@@ -82,7 +82,11 @@ def run_migrations_online():
 
     """
 
-    connectable = create_engine(get_url())
+    connectable = create_engine(
+        get_url(),
+        poolclass=pool.NullPool,
+        pool_pre_ping=True
+    )
 
     with connectable.connect() as connection:
         context.configure(
