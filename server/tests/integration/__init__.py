@@ -25,6 +25,7 @@ def get_test_environment_cached():
     return IntegrationTestEnvironment()
 
 
+@lru_cache
 def create_test_async_engine():
     environment = get_test_environment_cached()
     return create_async_engine(
@@ -142,7 +143,10 @@ def cwd_to_root():
 async def create_db_upgrade(cwd_to_root, db_docker_container):
 
     alembic_config = AlembicConfig("alembic.ini")
-    alembic_upgrade(alembic_config, 'head')
+    try:
+        alembic_upgrade(alembic_config, 'head')
+    except Exception:
+        pass
 
     yield
 
