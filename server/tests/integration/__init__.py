@@ -16,6 +16,7 @@ from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from mock import Mock
 from fastapi import FastAPI
+from sqlalchemy.pool import NullPool
 
 
 @lru_cache
@@ -33,6 +34,7 @@ def create_test_async_engine():
             db_pass=environment.TEST_DB_PASS,
             db_user=environment.TEST_DB_USER
         ),
+        poolclass=NullPool
     )
 
 
@@ -49,10 +51,7 @@ def mock_default_environment_variables():
         ACCESS_TOKEN_SECRET_KEY="secret",
         ACCESS_TOKEN_ALGORITHM="HS256",
         ACCESS_TOKEN_EXPIRE_DELTA_IN_SECONDS=86400,
-        MAIL_TOKEN_SECRET_KEY="secret",
-        MAIL_TOKEN_ALGORITHM="HS256",
-        MAIL_TOKEN_EXPIRE_DELTA_IN_SECONDS=86400,
-        SERVER_DNS="SERVER_DNS"
+        AUTHENTICATOR_DNS="/fake/users/token"
     )
 
 
@@ -60,6 +59,7 @@ async def get_test_async_session():
     session_maker = build_test_async_session_maker()
     async with session_maker() as session:
         yield session
+        session.close()
 
 
 @pytest.fixture
@@ -72,7 +72,7 @@ async def db_docker_container():
         image='postgres',
         auto_remove=True,
         detach=True,
-        name="db_mc855_authenticator",
+        name="db_mc855_projetos",
         ports={
             "5432/tcp": environment.TEST_DB_PORT
         },
