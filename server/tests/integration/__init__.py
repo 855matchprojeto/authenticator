@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient
 from mock import Mock
 from fastapi import FastAPI
 from sqlalchemy.pool import NullPool
+from sqlalchemy.orm import close_all_sessions
 
 
 @lru_cache
@@ -146,4 +147,5 @@ async def create_db_upgrade(cwd_to_root, db_docker_container):
     yield
 
     db_docker_container.stop()
+    close_all_sessions()
 
