@@ -91,7 +91,7 @@ async def db_docker_container():
 
     docker_start_sleep_time = 1
     max_retries = 10
-    await asyncio.sleep(docker_start_sleep_time)
+    time.sleep(docker_start_sleep_time)
     exec_res = postgres_docker_container.exec_run(
         cmd='pg_isready'
     )
@@ -99,7 +99,7 @@ async def db_docker_container():
     retries = 0
     while exec_res.exit_code != 0 and retries != max_retries:
         print(retries)
-        await asyncio.sleep(docker_start_sleep_time)
+        time.sleep(docker_start_sleep_time)
         exec_res = postgres_docker_container.exec_run(
             cmd='pg_isready'
         )
@@ -123,7 +123,7 @@ def _test_app(create_db_upgrade, scope="session"):
 
 
 @pytest.fixture
-def _test_app_default_environment(_test_app: FastAPI, scope="session") -> FastAPI:
+def _test_app_default_environment(_test_app: FastAPI) -> FastAPI:
     _test_app.dependency_overrides[get_environment_cached] = mock_default_environment_variables
     return _test_app
 
@@ -147,5 +147,5 @@ async def create_db_upgrade(cwd_to_root, db_docker_container):
 
     db_docker_container.stop()
     close_all_sessions()
-    await asyncio.sleep(1)
+    time.sleep(1)
 
