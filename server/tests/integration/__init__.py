@@ -34,7 +34,8 @@ def create_test_async_engine():
             db_pass=environment.TEST_DB_PASS,
             db_user=environment.TEST_DB_USER
         ),
-        poolclass=NullPool
+        poolclass=NullPool,
+        pool_pre_ping=True
     )
 
 
