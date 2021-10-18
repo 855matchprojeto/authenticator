@@ -1,7 +1,7 @@
 import pytest
 import uuid
 from fastapi import FastAPI
-from server.tests.integration import db_docker_container, cwd_to_root, create_db_upgrade, _test_client, \
+from server.tests.integration import db_docker_container, cwd_to_root, create_db_upgrade, \
     _test_app, _test_app_default_environment, get_test_async_session
 from fastapi.testclient import TestClient
 from jose import jwt
@@ -178,7 +178,7 @@ class TestUsuarioService:
 
     @staticmethod
     @pytest.mark.asyncio
-    async def test_get_current_user_no_headers(_test_app_default_environment: FastAPI, _test_client: TestClient):
+    async def test_get_current_user_no_headers(_test_app_default_environment: FastAPI):
 
         async with AsyncClient(
                 app=_test_app_default_environment,
@@ -194,8 +194,10 @@ class TestUsuarioService:
 
     @staticmethod
     @pytest.mark.asyncio
-    async def test_get_current_user_wrong_secret(_test_app_default_environment: FastAPI, _test_client: TestClient,
-                                           current_user_token_wrong_secret):
+    async def test_get_current_user_wrong_secret(
+        _test_app_default_environment: FastAPI,
+        current_user_token_wrong_secret
+    ):
 
         async with AsyncClient(
                 app=_test_app_default_environment,
@@ -214,8 +216,10 @@ class TestUsuarioService:
 
     @staticmethod
     @pytest.mark.asyncio
-    async def test_get_current_user_expired_token(_test_app_default_environment: FastAPI, _test_client: TestClient,
-                                            current_user_token_expired):
+    async def test_get_current_user_expired_token(
+        _test_app_default_environment: FastAPI,
+        current_user_token_expired
+    ):
 
         async with AsyncClient(
                 app=_test_app_default_environment,
@@ -235,7 +239,7 @@ class TestUsuarioService:
     @staticmethod
     @pytest.mark.asyncio
     async def test_get_current_user_wrong_schema_validation(
-        _test_app_default_environment: FastAPI, _test_client: TestClient,
+        _test_app_default_environment: FastAPI,
         current_user_wrong_schema
     ):
         async with AsyncClient(
@@ -258,7 +262,7 @@ class TestUsuarioService:
     @pytest.mark.parametrize("username, email, guid, roles, name, security_scopes_overrider",
                              ENOUGH_PERMISSION_DATA)
     async def test_current_user_enough_permissions(
-            _test_app_default_environment: FastAPI, _test_client: TestClient,
+            _test_app_default_environment: FastAPI,
             username, email, guid, roles, security_scopes_overrider,
             name, write_mock_permissions_db
     ):
@@ -299,7 +303,7 @@ class TestUsuarioService:
     @pytest.mark.parametrize("username, email, guid, roles, name, security_scopes_overrider",
                              NOT_ENOUGH_PERMISSION_DATA)
     async def test_current_user_not_enough_permissions(
-            _test_app_default_environment: FastAPI, _test_client: TestClient,
+            _test_app_default_environment: FastAPI,
             username, email, guid, roles, security_scopes_overrider,
             name, write_mock_permissions_db
     ):

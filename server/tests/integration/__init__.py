@@ -78,7 +78,7 @@ async def db_docker_container():
         image='postgres',
         auto_remove=True,
         detach=True,
-        name="db_mc855_projetos",
+        name="db_mc855_authenticator",
         ports={
             "5432/tcp": environment.TEST_DB_PORT
         },
@@ -116,25 +116,20 @@ async def db_docker_container():
 
 
 @pytest.fixture
-def _test_app(create_db_upgrade):
+def _test_app(create_db_upgrade, scope="session"):
     app = _init_app()
     app.dependency_overrides[get_session] = get_test_async_session
     return app
 
 
 @pytest.fixture
-def _test_client(_test_app):
-    return TestClient(_test_app)
-
-
-@pytest.fixture
-def _test_app_default_environment(_test_app: FastAPI) -> FastAPI:
+def _test_app_default_environment(_test_app: FastAPI, scope="session") -> FastAPI:
     _test_app.dependency_overrides[get_environment_cached] = mock_default_environment_variables
     return _test_app
 
 
 @pytest.fixture
-def cwd_to_root():
+def cwd_to_root(scope="session"):
     root_path = pathlib.Path(__file__).parents[3]
     os.chdir(root_path)
 
