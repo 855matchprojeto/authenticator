@@ -152,4 +152,5 @@ async def create_db_upgrade(cwd_to_root, db_docker_container):
 
     db_docker_container.stop()
     close_all_sessions()
+    await asyncio.sleep(1)
 
