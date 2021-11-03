@@ -31,7 +31,7 @@ class Environment(BaseSettings):
 
     MAIL_USERNAME: str
     MAIL_PASSWORD: str
-    MAIL_FROM: EmailStr
+    MAIL_FROM: str
     MAIL_PORT: int
     MAIL_SERVER: str
     MAIL_TLS: int
@@ -39,6 +39,16 @@ class Environment(BaseSettings):
     MAIL_USE_CREDENTIALS: int
 
     SERVER_DNS: str
+
+    # Configurações AWS
+
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_KEY: str
+    AWS_REGION_NAME: str
+
+    # TOPIC ARN
+
+    USER_CREATED_TOPIC_ARN: str
 
     @staticmethod
     def get_db_conn_async(database_url: str):

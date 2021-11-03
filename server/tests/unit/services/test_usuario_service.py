@@ -476,8 +476,17 @@ class TestUsuarioService:
             return_value=single_user_arr_email_nao_verificado_db
         )
 
+        publisher_service_mock = Mock()
+        publisher_service_mock.publish = Mock(return_value=None)
+
+        environment_mock = Mock(
+            USER_CREATED_TOPIC_ARN="def"
+        )
+
         service = UsuarioService(
-            user_repo=user_repo_mock
+            user_repo=user_repo_mock,
+            publisher_service=publisher_service_mock,
+            environment=environment_mock
         )
 
         with pytest.raises(exceptions.UsernameConflictException):
@@ -496,13 +505,22 @@ class TestUsuarioService:
         usuario_input_mock.nome = nome
         usuario_input_mock.password = password
 
+        publisher_service_mock = Mock()
+        publisher_service_mock.publish = Mock(return_value=None)
+
         user_repo_mock = Mock()
         user_repo_mock.find_usuarios_by_filtros = AsyncMock(
             return_value=single_user_arr_email_nao_verificado_db
         )
 
+        environment_mock = Mock(
+            USER_CREATED_TOPIC_ARN="def"
+        )
+
         service = UsuarioService(
-            user_repo=user_repo_mock
+            environment=environment_mock,
+            user_repo=user_repo_mock,
+            publisher_service=publisher_service_mock
         )
 
         with pytest.raises(exceptions.EmailConflictException):
@@ -538,8 +556,17 @@ class TestUsuarioService:
         )
         user_repo_mock.insere_usuario = AsyncMock(return_value=None)
 
+        publisher_service_mock = Mock()
+        publisher_service_mock.publish = Mock(return_value=None)
+
+        environment_mock = Mock(
+            USER_CREATED_TOPIC_ARN="def"
+        )
+
         service = UsuarioService(
-            user_repo=user_repo_mock
+            user_repo=user_repo_mock,
+            publisher_service=publisher_service_mock,
+            environment=environment_mock
         )
 
         await service.cria_novo_usuario(usuario_input_mock)

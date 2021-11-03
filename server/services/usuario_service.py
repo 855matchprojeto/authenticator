@@ -1,6 +1,6 @@
 from server.repository.usuario_repository import UsuarioRepository
 from server.configuration.db import AsyncSession
-from server.schemas.usuario_schema import UsuarioInput, UsuarioOutput
+from server.schemas.usuario_schema import UsuarioInput, UsuarioOutput, UsuarioPublishInput
 from server.models.usuario_model import Usuario
 import re
 from server.configuration import exceptions
@@ -10,7 +10,7 @@ from jose import JWTError, jwt
 from server.schemas.token_shema import DecodedMailToken
 from datetime import timedelta
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Any
 from fastapi.security import OAuth2PasswordRequestForm
 from server.services.email_service import EmailService
 from fastapi import Request
@@ -18,6 +18,7 @@ from pydantic import ValidationError, EmailStr
 from server.templates import jinja2_templates
 from server.configuration.environment import Environment
 from server.schemas.usuario_schema import CurrentUserOutput
+import json
 
 
 class UsuarioService:
@@ -36,6 +37,15 @@ class UsuarioService:
     @staticmethod
     def criptografa_senha(password: str) -> str:
         return UsuarioService.CRYPT_CONTEXT.hash(password)
+
+    @staticmethod
+    def get_user_created_payload(user_created: Usuario):
+        user_created_dict = user_created.__dict__
+        payload_dict = dict(
+            type='create',
+            user=UsuarioPublishInput(**user_created_dict).convert_to_dict()
+        )
+        return json.dumps(payload_dict)
 
     @staticmethod
     def gera_token(data_to_encode: dict, expires_delta: timedelta,
@@ -75,11 +85,17 @@ class UsuarioService:
         """
         return CurrentUserOutput(**current_user.dict())
         
-    def __init__(self, user_repo: Optional[UsuarioRepository] = None, environment: Optional[Environment] = None,
-                 email_sender_service: Optional[EmailService] = None):
+    def __init__(
+        self,
+        user_repo: Optional[UsuarioRepository] = None,
+        environment: Optional[Environment] = None,
+        email_sender_service: Optional[EmailService] = None,
+        publisher_service: Optional[Any] = None
+    ):
         self.user_repo = user_repo
         self.environment = environment
         self.email_sender_service = email_sender_service
+        self.publisher_service = publisher_service
 
     async def autentica_usuario(self, username: str, password: str):
         """
@@ -325,5 +341,16 @@ class UsuarioService:
 
         # Insere no banco de dados e retorna o usuário
 
-        return await self.user_repo.insere_usuario(novo_usuario_dict)
+        user_created = await self.user_repo.insere_usuario(novo_usuario_dict)
+
+        if user_created:
+
+            # Define um payload para a mensagem para o publicador de mensagem
+
+            self.publisher_service.publish(
+                UsuarioService.get_user_created_payload(user_created),
+                self.environment.USER_CREATED_TOPIC_ARN
+            )
+
+        return user_created
 

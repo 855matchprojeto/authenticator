@@ -10,6 +10,7 @@ from fastapi.security import SecurityScopes
 from server.dependencies.get_security_scopes import get_security_scopes
 from server.dependencies.get_email_sender_service import get_email_sender_service
 from server.dependencies.get_environment_cached import get_environment_cached
+from server.dependencies.get_sns_publisher_service import get_sns_publisher_service
 from mock import Mock
 from server.tests.integration import build_test_async_session_maker
 from server.models.permissao_model import Permissao
@@ -33,9 +34,18 @@ def build_mock_email_service():
     return mock_email_service
 
 
+def build_mock_sns_publisher_service():
+    mock_publisher_service = Mock()
+    mock_publisher_service.publish = Mock(
+        return_value=None
+    )
+    return mock_publisher_service
+
+
 @pytest.fixture
-def _test_app_default_environment_mock_email_service(_test_app_default_environment: FastAPI) -> FastAPI:
+def _test_app_default_environment_mock_services(_test_app_default_environment: FastAPI) -> FastAPI:
     _test_app_default_environment.dependency_overrides[get_email_sender_service] = build_mock_email_service
+    _test_app_default_environment.dependency_overrides[get_sns_publisher_service] = build_mock_sns_publisher_service
     return _test_app_default_environment
 
 
@@ -363,12 +373,12 @@ class TestUsuarioController:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("body", INVALID_BODY_POST_NEW_USER_PARAMETRIZE)
     async def test_post_new_user_invalid_body(
-        _test_app_default_environment: FastAPI,
+        _test_app_default_environment_mock_services: FastAPI,
         body
     ):
 
         async with AsyncClient(
-            app=_test_app_default_environment,
+            app=_test_app_default_environment_mock_services,
             base_url='http://test'
         ) as test_async_client:
 
@@ -385,12 +395,12 @@ class TestUsuarioController:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("body", CONFLICT_USER_BODY_POST_NEW_USER_PARAMETRIZE)
     async def test_post_new_user_conflict_user(
-        _test_app_default_environment: FastAPI,
+        _test_app_default_environment_mock_services: FastAPI,
         body, write_single_user_db_nao_verificado
     ):
 
         async with AsyncClient(
-            app=_test_app_default_environment,
+            app=_test_app_default_environment_mock_services,
             base_url='http://test'
         ) as test_async_client:
 
@@ -407,12 +417,12 @@ class TestUsuarioController:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("body", VALID_BODY_POST_NEW_USER_PARAMETRIZE)
     async def test_post_new_user(
-        _test_app_default_environment: FastAPI,
+        _test_app_default_environment_mock_services: FastAPI,
         body, write_single_user_db_nao_verificado
     ):
 
         async with AsyncClient(
-            app=_test_app_default_environment,
+            app=_test_app_default_environment_mock_services,
             base_url='http://test'
         ) as test_async_client:
 
@@ -683,11 +693,11 @@ class TestUsuarioController:
     @staticmethod
     @pytest.mark.asyncio
     async def test_send_email_verification_link_username_not_found(
-        _test_app_default_environment_mock_email_service
+        _test_app_default_environment_mock_services
     ):
 
         async with AsyncClient(
-            app=_test_app_default_environment_mock_email_service,
+            app=_test_app_default_environment_mock_services,
             base_url='http://test'
         ) as test_async_client:
             test_async_client: AsyncClient
@@ -701,12 +711,12 @@ class TestUsuarioController:
     @staticmethod
     @pytest.mark.asyncio
     async def test_send_email_verification_link_email_already_confirmed(
-        _test_app_default_environment_mock_email_service,
+        _test_app_default_environment_mock_services,
         write_single_user_db_email_verificado
     ):
 
         async with AsyncClient(
-            app=_test_app_default_environment_mock_email_service,
+            app=_test_app_default_environment_mock_services,
             base_url='http://test'
         ) as test_async_client:
             test_async_client: AsyncClient
@@ -720,11 +730,11 @@ class TestUsuarioController:
     @staticmethod
     @pytest.mark.asyncio
     async def test_send_email_verification_link(
-            _test_app_default_environment_mock_email_service,
+            _test_app_default_environment_mock_services,
             write_single_user_db_nao_verificado
     ):
         async with AsyncClient(
-            app=_test_app_default_environment_mock_email_service,
+            app=_test_app_default_environment_mock_services,
             base_url='http://test'
         ) as test_async_client:
             test_async_client: AsyncClient

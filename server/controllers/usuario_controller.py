@@ -17,6 +17,9 @@ from server.configuration.environment import Environment
 from server.services.email_service import EmailService
 from server.dependencies.get_email_sender_service import get_email_sender_service
 from server.schemas import error_schema
+from server.dependencies.get_sns_publisher_service import get_sns_publisher_service
+from server.services.aws_publisher_service import AWSPublisherService
+import boto3
 
 
 router = APIRouter()
@@ -146,7 +149,8 @@ async def get_current_user(
 async def post_novo_usuario(
     usuario_input: usuario_schema.UsuarioInput,
     session: AsyncSession = Depends(get_session),
-    environment: Environment = Depends(get_environment_cached)
+    environment: Environment = Depends(get_environment_cached),
+    publisher_service: AWSPublisherService = Depends(get_sns_publisher_service)
 ):
 
     """
@@ -169,7 +173,8 @@ async def post_novo_usuario(
 
     service = UsuarioService(
         UsuarioRepository(session, environment),
-        environment
+        environment,
+        publisher_service=publisher_service
     )
     return await service.cria_novo_usuario(usuario_input)
 
