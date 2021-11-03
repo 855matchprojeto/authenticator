@@ -2,6 +2,7 @@ from server.schemas import AuthenticatorModelInput, AuthenticatorModelOutput
 from pydantic import Field, BaseModel, EmailStr
 from datetime import datetime
 from typing import List, Optional
+from uuid import UUID as GUID
 
 
 class UsuarioInput(AuthenticatorModelInput):
@@ -21,6 +22,7 @@ class UsuarioInput(AuthenticatorModelInput):
 
 class UsuarioOutput(AuthenticatorModelOutput):
 
+    guid: GUID
     nome: str = Field(None, example='Teste')
     username: str = Field(None, example='username')
     email: EmailStr = Field(None, example="teste@unicamp.br")
@@ -31,6 +33,22 @@ class UsuarioOutput(AuthenticatorModelOutput):
     class Config:
         orm_mode = True
         arbitrary_types_allowed = True
+
+
+class UsuarioPublishInput(BaseModel):
+
+    guid: GUID
+    nome: str = Field(None, example='Teste')
+    username: str = Field(None, example='username')
+    email: EmailStr = Field(None, example="teste@unicamp.br")
+    email_verificado: bool = Field(None)
+    created_at: datetime = Field(None)
+
+    def convert_to_dict(self):
+        _dict = self.dict()
+        _dict['guid'] = str(_dict['guid'])
+        _dict['created_at'] = str(_dict['created_at'])
+        return _dict
 
 
 class CurrentUserToken(BaseModel):
