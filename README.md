@@ -28,10 +28,11 @@ TO DO
 
 ## Prints das telas com descrição das funcionalidades. 
 <img width="883" alt="Captura de Tela 2021-11-25 às 11 30 52" src="https://user-images.githubusercontent.com/45739756/143462405-238cd087-ae71-44a5-99f8-b36f93cffae6.png">
+
 ### página de detalhes do projeto, seja ele criado pelo usuário atual ou por outro
 
 <img width="892" alt="Captura de Tela 2021-11-25 às 11 30 46" src="https://user-images.githubusercontent.com/45739756/143462565-9e591210-bd22-48cb-875c-32a5907d1603.png">
-### página de perfil do usuário atual, permitindo edição dos dados
+página de perfil do usuário atual, permitindo edição dos dados
 
 <img width="939" alt="Captura de Tela 2021-11-25 às 11 30 38" src="https://user-images.githubusercontent.com/45739756/143462637-cb215f5c-97a3-41ec-beca-17b1d397ee9d.png">
 ### página de edição de projeto criado pelo usuário atual
