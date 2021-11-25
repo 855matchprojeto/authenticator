@@ -24,9 +24,10 @@
 
 
 ## Descrição do projeto:
-
+TO DO
 
 ## Prints das telas com descrição das funcionalidades. 
+TO DO
 
 ## Tecnologias, ferramentas, dependências, versões. etc. 
 
@@ -50,8 +51,7 @@ Features Implementadas:
 - Verificação de e-mail utilizando token enviado pelo usuário ao clicar no link do e-mail
 - Testes unitários e de integração
 
-
-## FAST-API
+### FAST-API
 
 Os microsserviços serão implementados utilizando o framework web FAST-API. É um framework baseado no módulo de type-hints do python. A partir dos type-hints, o framework realiza a documentação de maneira automática, definindo inputs e outputs de um endpoint. 
 
@@ -85,13 +85,16 @@ Podemos citar algumas funcionalidades importantes no CLI do Alembic:
 ## Ambientes
 
 ## Como colocar no ar, como testar, etc
-acesso ao site pelo link: https://match-projetos.herokuapp.com/
+Acesso ao site pelo link: https://match-projetos.herokuapp.com/
 OBS: o primeiro acesso pode demorar um pouco até o Heroku responder. Favor continuar atualizando a página
 
 ## Como acessar, quem pode se cadastrar(regras de acessos), etc.
-acesso com usuário com nome de usuário "admin" e senha "admin123"
+Acesso com usuário com nome de usuário "admin" e senha "admin123", ou realizar cadastro próprio. A regra de acesso é que o email cadastrado no usuário deve ser de domínio da Unicamp, isto é, de final "unicamp.br"
+
 
 ## Repositório da Professora Juliana no Gitlab do IC ou Zip com o projeto e todos artefatos para futuras evoluções dos projetos por outros alunos das turmas seguintes
+TO DO
+
 
 # Notas específicas sobre o autenthicator
 ## Estrutura do código
