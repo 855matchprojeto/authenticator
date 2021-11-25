@@ -1,9 +1,9 @@
 # Universidade Estadual de Campinas
 # Instituto da Computação
 
-## Disciplina: MC855-2s2021
+# Disciplina: MC855-2s2021
 
-#### Professor e Assistente
+## Professor e Assistente
 
 | Nome                     | Email                   |
 | ------------------------ | ------------------------|
@@ -11,7 +11,7 @@
 | Assistente Paulo Kussler | paulo.kussler@gmail.com |
 
 
-#### Equipe
+## Equipe
 
 | Nome               | RA               | Email                  | ID Git                |
 | ------------------ | ---------------- | ---------------------- |---------------------- |
@@ -23,11 +23,14 @@
 | Thomas Gomes Ferreira                  | 224919                | t224919@dac.unicamp.br                     |   Desnord                   |
 
 
-# LINK DA API ATUAL
+## Descrição do projeto:
 
-https://authenticator-match-projetos.herokuapp.com/docs
 
-# Visão geral da arquitetura
+## Prints das telas com descrição das funcionalidades. 
+
+## Tecnologias, ferramentas, dependências, versões. etc. 
+
+### Visão geral da arquitetura
 
 A arquitetura do back-end será definida em microsserviços. Ao contrário de uma arquitetura convencional monolítica, a aplicação em microsserviços é desmembrada em partes menores e independentes entre si.
 
@@ -35,7 +38,7 @@ Ao fazer o login pelo autenticador, o usuário receberá um token de acesso, com
 
 Apesar do microsserviço de autenticação ser responsável pela criação de usuários e suas funções, cada microsserviço implementará seu próprio sistema de permissões, com base nas funções do usuário que fez a requisição. Note que as funções do usuário estarão disponíveis no token de acesso decodificado.
 
-# Descrição
+### Descrição do authenticator
 
 O microsserviço de autenticação é responsável pela implementação do serviço de identificação de usuários. Além disso, são definidos tabelas para o banco de dados, tais como usuário, função e vínculo de usuários com funções. Como supracitado, o autenticador também definirá tabelas de permissões, específicas para esse microsserviço.
 
@@ -47,7 +50,6 @@ Features Implementadas:
 - Verificação de e-mail utilizando token enviado pelo usuário ao clicar no link do e-mail
 - Testes unitários e de integração
 
-# Aspectos Técnicos
 
 ## FAST-API
 
@@ -55,7 +57,11 @@ Os microsserviços serão implementados utilizando o framework web FAST-API. É 
 
 O FAST-API implementa a especificação ASGI (Asynchronous Server Gateway Interface), que provê um padrão assíncrono (e também um padrão síncrono) para implementação de aplicativos em python. Nesse projeto, utilizaremos a funcionalidade assíncrona do FAST-API em nosso favor, principalmente ao requisitar o banco de dados.
 
-## SQL-Alchemy
+### LINK DA API ATUAL
+
+https://authenticator-match-projetos.herokuapp.com/docs
+
+### SQL-Alchemy
 
 O SQL-Alchemy é uma biblioteca em python, com o objetivo de facilitar a comunicação entre programas e python com um banco de dados relacional. 
 
@@ -63,7 +69,7 @@ Nesse projeto, utilizaremos o ORM (Object Relational Mapper) do SQL-Alchemy, con
 
 Além disso, o ORM provê uma flexibilidade de tecnologias de banco de dados. A tradução, citada anteriormente, é realizada de maneira similar nos bancos de dados que o SQL-Alchemy implementa. Por exemplo, se houver necessidade de alterar a tecnologia de banco de dados PostgreSQL vigente para outra, como MySQL, não haverá muitos problemas.
 
-## Alembic
+### Alembic
 
 O Alembic é uma ferramenta de migração de dados, que funciona a partir da 'engine' disponível no SQL-Alchemy. O Alembic se conecta à um banco de dados e define um versionamento 'alembic_version'. A partir do 'metadata' do banco de dados criado no projeto, o Alembic é capaz de verificar se foram implementadas alterações nas classes que definem os modelos do banco de dados. Caso requisitado pelo programador, o Alembic pode gerar um script de revisão, com as alterações necessárias no banco de dados. Ao executar esse script, o banco de dados é atualizado.
 
@@ -76,6 +82,18 @@ Podemos citar algumas funcionalidades importantes no CLI do Alembic:
 - alembic downgrade -1: Desfaz a última alteração definida pelo alembic
 - alembic downgrade {revision}: Desfaz as últimas alterações definidas pelo alembic, até que se retorna à versão definida por {revision}.
 
+## Ambientes
+
+## Como colocar no ar, como testar, etc
+acesso ao site pelo link: https://match-projetos.herokuapp.com/
+OBS: o primeiro acesso pode demorar um pouco até o Heroku responder. Favor continuar atualizando a página
+
+## Como acessar, quem pode se cadastrar(regras de acessos), etc.
+acesso com usuário com nome de usuário "admin" e senha "admin123"
+
+## Repositório da Professora Juliana no Gitlab do IC ou Zip com o projeto e todos artefatos para futuras evoluções dos projetos por outros alunos das turmas seguintes
+
+# Notas específicas sobre o autenthicator
 ## Estrutura do código
 
 ### configuration
