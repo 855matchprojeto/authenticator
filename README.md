@@ -23,6 +23,10 @@
 | Thomas Gomes Ferreira                  | 224919                | t224919@dac.unicamp.br                     |   Desnord                   |
 
 
+# LINK DA API ATUAL
+
+https://authenticator-match-projetos.herokuapp.com/docs
+
 # Visão geral da arquitetura
 
 A arquitetura do back-end será definida em microsserviços. Ao contrário de uma arquitetura convencional monolítica, a aplicação em microsserviços é desmembrada em partes menores e independentes entre si.
@@ -41,6 +45,7 @@ Features Implementadas:
 - Autenticação baseada em tokens JWT
 - Envio de e-mail para verificação de usuário
 - Verificação de e-mail utilizando token enviado pelo usuário ao clicar no link do e-mail
+- Testes unitários e de integração
 
 # Aspectos Técnicos
 
