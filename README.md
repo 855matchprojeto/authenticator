@@ -23,7 +23,7 @@
 | Thomas Gomes Ferreira                  | 224919                | t224919@dac.unicamp.br                     |   Desnord                   |
 
 ## Específico sobre esse repositório: 
-Esse repositório faz parte do projetos da plataforma de Match de Projetos desenvolvido no 2s/2021 para a disciplina MC-855 na Unicamp. Neste repositório se encontra a implementação do microsserviço de autenticação dos usuários (criação de usuário, login, etc) para o projeto
+Esse repositório faz parte do projetos da plataforma de Match de Projetos desenvolvido no 2s/2021 para a disciplina MC-855 na Unicamp (Ehttps://github.com/orgs/855matchprojeto/repositories). Neste repositório se encontra a implementação do microsserviço de autenticação dos usuários (criação de usuário, login, etc) para o projeto
 
 ## Descrição do projeto:
 Nosso projeto é uma plataforma em que os usuários cadastrados (da Unicamp, vide políticas de acesso), alunos ou professores, podem cadastrar projetos (com título, imagem, descrição, cursos e áreas envolvidas), e disponibilizar na plataforma para outro usuário "dar match", isso é, mostrar interesse. O usuário também tem, na sua página "Home", uma lista de projetos disponíveis que podem ser do seu interesse.
