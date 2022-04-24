@@ -39,6 +39,14 @@ class UsuarioRepository:
         query = await self.db_session.execute(stmt)
         return query.scalars().all()
 
+    async def find_usuario_by_guid(self, guid_usuario: str) -> List[Usuario]:
+        stmt = (
+            select(Usuario).
+            where(Usuario.guid == guid_usuario)
+        )
+        query = await self.db_session.execute(stmt)
+        return query.scalars().first()
+
     async def verify_email(self, user: Usuario) -> Usuario:
         user.email_verificado = True
         await self.db_session.flush()

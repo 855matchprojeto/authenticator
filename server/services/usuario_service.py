@@ -112,6 +112,9 @@ class UsuarioService:
     async def get_all_users(self):
         return await self.user_repo.find_usuarios_by_filtros(filtros=[])
 
+    async def get_user_by_guid(self, guid_usuario: str):
+        return await self.user_repo.find_usuario_by_guid(guid_usuario)
+
     async def verify_email(self, request: Request, code: str):
         """
             No email de verificação é enviado uma query
