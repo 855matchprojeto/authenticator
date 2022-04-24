@@ -305,3 +305,61 @@ async def verify_email(
     )
     return await service.verify_email(request, code)
 
+
+@router.post(
+    "/{guid_usuario}",
+    response_model=usuario_schema.UsuarioOutput,
+    summary='Cria um perfil e um usuário na tabela de usuário (neste microserviço)',
+    response_description='Cria um perfil e um usuário na tabela de usuário (neste microserviço)',
+    include_in_schema=True,
+    responses={
+        401: {
+            'model': error_schema.ErrorOutput401,
+        },
+        404: {
+            'model': error_schema.ErrorOutput404,
+        },
+        422: {
+            'model': error_schema.ErrorOutput422,
+        },
+        500: {
+            'model': error_schema.ErrorOutput500
+        }
+    }
+)
+@endpoint_exception_handler
+async def get_user_by_guid(
+    guid_usuario: str,
+    _: usuario_schema.CurrentUserToken = Security(
+        get_current_user, scopes=[RoleBasedPermission.READ_ALL_USERS['name']]),
+    session: AsyncSession = Depends(get_session),
+    environment: Environment = Depends(get_environment_cached),
+):
+
+    """
+        # Descrição
+
+        Captura um usuário e suas informações através de seu GUID. Apenas usuários com cargos com permissão
+        'READ_ALL_USERS' (Leitura de qualquer usuário) possuem a autorização para acessar essa requisiçõo.
+
+        # Erros
+
+        Segue a lista de erros, por (**error_id**, **status_code**), que podem ocorrer nesse endpoint:
+
+        - **(INVALID_OR_EXPIRED_TOKEN, 401)**: Token de acesso inválido ou expirado.
+        - **(REQUEST_VALIDATION_ERROR, 422)**: Validação padrão da requisição. O detalhamento é um JSON,
+        no formato de string, contendo os erros de validação encontrados.
+        - **(INTERNAL_SERVER_ERROR, 500)**: Erro interno no sistema
+
+    """
+
+    usuario_service = UsuarioService(
+        user_repo=UsuarioRepository(
+            db_session=session,
+            environment=environment
+        ),
+        environment=environment
+    )
+
+    return await usuario_service.get_user_by_guid(guid_usuario)
+
