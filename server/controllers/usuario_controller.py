@@ -306,7 +306,7 @@ async def verify_email(
     return await service.verify_email(request, code)
 
 
-@router.post(
+@router.get(
     "/{guid_usuario}",
     response_model=usuario_schema.UsuarioOutput,
     summary='Cria um perfil e um usuário na tabela de usuário (neste microserviço)',
